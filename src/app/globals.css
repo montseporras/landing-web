@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-cream text-ink font-sans;
+  }
+
+  ::selection {
+    @apply bg-lavender-200 text-ink;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  .container-content {
+    @apply mx-auto w-full max-w-content px-6 md:px-10;
+  }
+
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.22em] text-gold-600;
+  }
+
+  /*
+   * Justificado en todos los tamaños, incluido mobile. Justificar columnas
+   * angostas sin ayuda genera espacios irregulares entre palabras ("ríos" de
+   * blanco); `hyphens: auto` lo evita partiendo palabras largas al final de
+   * línea cuando hace falta (usa el diccionario de `lang="es"` del <html>),
+   * así el párrafo queda parejo de línea a línea en cualquier ancho.
+   */
+  .text-justify-soft {
+    @apply text-justify;
+    -webkit-hyphens: auto;
+    hyphens: auto;
+    text-wrap: pretty;
+  }
+
+  .prose-fs {
+    @apply text-justify-soft text-[1.0625rem] leading-relaxed text-muted;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Scrollbar sutil */
+  .scrollbar-thin::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-sand-300;
+  }
+}
+
+/* Respeto por usuarios que prefieren menos movimiento (WCAG) */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
