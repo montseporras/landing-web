@@ -79,6 +79,14 @@ export default function LoginPage() {
                 />
               </div>
             </div>
+            <label className="flex items-center gap-2 text-sm text-muted">
+              <input
+                type="checkbox"
+                name="remember"
+                className="h-4 w-4 rounded border-sand-300 text-lavender-600 focus:ring-lavender-500"
+              />
+              Recordarme en este dispositivo
+            </label>
             {state.error && (
               <p
                 role="alert"

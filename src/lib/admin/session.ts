@@ -8,10 +8,21 @@
  *
  * Usa la Web Crypto API, por lo que funciona tanto en Node como en el Edge
  * runtime del middleware. No guarda nada en base de datos.
+ *
+ * Duración: hay dos modos según el checkbox «Recordarme» del login.
+ *  - Sin «Recordarme» (por defecto): la cookie es de SESIÓN (sin maxAge), así
+ *    que el navegador la borra al cerrarse. El token se firma con una vida
+ *    corta como segunda barrera. Es el comportamiento seguro por defecto:
+ *    al cerrar y reabrir el navegador se vuelve a pedir la contraseña.
+ *  - Con «Recordarme»: la cookie persiste hasta SESSION_REMEMBER_S.
  */
 
 export const SESSION_COOKIE = "fs_admin_session";
-export const SESSION_DURATION_S = 60 * 60 * 24 * 7; // 7 días
+
+/** Vida del token cuando se marca «Recordarme» (cookie persistente): 7 días. */
+export const SESSION_REMEMBER_S = 60 * 60 * 24 * 7;
+/** Vida del token en una sesión normal (cookie de sesión del navegador): 12 h. */
+export const SESSION_SESSION_S = 60 * 60 * 12;
 
 function getSecret(): string | null {
   // ADMIN_SECRET es opcional; si no está, se deriva de la contraseña.
@@ -47,11 +58,13 @@ async function sign(payload: string, secret: string): Promise<string> {
   return toBase64Url(signature);
 }
 
-/** Crea un token de sesión válido por SESSION_DURATION_S. */
-export async function createSessionToken(): Promise<string | null> {
+/** Crea un token de sesión válido por `durationS` segundos (default: 12 h). */
+export async function createSessionToken(
+  durationS: number = SESSION_SESSION_S,
+): Promise<string | null> {
   const secret = getSecret();
   if (!secret) return null;
-  const exp = Math.floor(Date.now() / 1000) + SESSION_DURATION_S;
+  const exp = Math.floor(Date.now() / 1000) + durationS;
   const signature = await sign(`fs-admin.${exp}`, secret);
   return `${exp}.${signature}`;
 }

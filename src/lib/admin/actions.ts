@@ -3,9 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { ADMIN_BASE_PATH } from "@/lib/admin/config";
 import {
   SESSION_COOKIE,
-  SESSION_DURATION_S,
+  SESSION_REMEMBER_S,
+  SESSION_SESSION_S,
   createSessionToken,
   verifySessionToken,
 } from "@/lib/admin/session";
@@ -116,6 +118,9 @@ export async function loginAction(
 
     const username = cleanText(formData.get("username"), 200);
     const password = String(formData.get("password") ?? "").slice(0, 500);
+    // «Recordarme»: si está marcado, la sesión persiste entre reinicios del
+    // navegador; si no, es una cookie de sesión (se borra al cerrar el navegador).
+    const remember = formData.get("remember") === "on";
 
     const [userOk, passOk] = await Promise.all([
       safeEqual(username, expectedUser),
@@ -125,7 +130,8 @@ export async function loginAction(
       return { error: "Usuario o contraseña incorrectos." };
     }
 
-    const token = await createSessionToken();
+    const duration = remember ? SESSION_REMEMBER_S : SESSION_SESSION_S;
+    const token = await createSessionToken(duration);
     if (!token) {
       logError("login", "No se pudo crear el token de sesión");
       return { error: "No fue posible iniciar sesión. Intentalo nuevamente." };
@@ -136,18 +142,32 @@ export async function loginAction(
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: SESSION_DURATION_S,
+      // Con «Recordarme» la cookie persiste; sin él es cookie de sesión (sin
+      // maxAge), así el navegador la elimina al cerrarse y se vuelve a pedir
+      // la contraseña. La expiración firmada del token es la segunda barrera.
+      ...(remember ? { maxAge: SESSION_REMEMBER_S } : {}),
     });
   } catch (e) {
     logError("login", e);
     return { error: "No fue posible iniciar sesión. Intentalo nuevamente." };
   }
 
-  redirect("/admin");
+  redirect(ADMIN_BASE_PATH);
   return { error: null }; // inalcanzable: redirect() lanza internamente
 }
 
 export async function logoutAction(): Promise<void> {
+  // Borrado robusto: sobrescribe la cookie ya vencida (mismo path/flags con
+  // los que se creó) y además la elimina. Así no queda ningún rastro que
+  // permita volver a entrar automáticamente.
+  cookies().set(SESSION_COOKIE, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 0,
+    expires: new Date(0),
+  });
   cookies().delete(SESSION_COOKIE);
   redirect("/");
 }

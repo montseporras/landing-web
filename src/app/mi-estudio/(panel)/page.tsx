@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AdminCard, AdminHeader, NotConfigured } from "@/components/admin/ui";
 import { adminCount } from "@/lib/admin/actions";
+import { ADMIN_BASE_PATH } from "@/lib/admin/config";
 
 interface Stats {
   regalos: number;
@@ -42,31 +43,31 @@ export default function AdminDashboard() {
       label: "Mensajes sin leer",
       value: stats?.nuevos,
       icon: MailWarning,
-      href: "/admin/formularios",
+      href: `${ADMIN_BASE_PATH}/formularios`,
     },
     {
       label: "Regalos publicados",
       value: stats?.regalos,
       icon: Gift,
-      href: "/admin/regalos",
+      href: `${ADMIN_BASE_PATH}/regalos`,
     },
     {
       label: "Preguntas frecuentes",
       value: stats?.faqs,
       icon: HelpCircle,
-      href: "/admin/faq",
+      href: `${ADMIN_BASE_PATH}/faq`,
     },
     {
       label: "Mensajes de contacto",
       value: stats?.contactos,
       icon: Inbox,
-      href: "/admin/formularios",
+      href: `${ADMIN_BASE_PATH}/formularios`,
     },
     {
       label: "Solicitudes de llamada",
       value: stats?.llamadas,
       icon: PhoneCall,
-      href: "/admin/formularios",
+      href: `${ADMIN_BASE_PATH}/formularios`,
     },
   ];
 
@@ -100,19 +101,19 @@ export default function AdminDashboard() {
       <AdminCard className="mt-8" title="Accesos rápidos">
         <div className="flex flex-wrap gap-3">
           <Link
-            href="/admin/regalos"
+            href={`${ADMIN_BASE_PATH}/regalos`}
             className="rounded-full bg-lavender-600 px-5 py-2.5 text-sm text-cream transition-colors hover:bg-lavender-700"
           >
             + Subir un regalo
           </Link>
           <Link
-            href="/admin/inicio"
+            href={`${ADMIN_BASE_PATH}/inicio`}
             className="rounded-full border border-sand-300 px-5 py-2.5 text-sm text-ink transition-colors hover:border-lavender-400"
           >
             Editar página de inicio
           </Link>
           <Link
-            href="/admin/formularios"
+            href={`${ADMIN_BASE_PATH}/formularios`}
             className="rounded-full border border-sand-300 px-5 py-2.5 text-sm text-ink transition-colors hover:border-lavender-400"
           >
             Ver mensajes recibidos

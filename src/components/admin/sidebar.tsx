@@ -17,21 +17,31 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { logoutAction } from "@/lib/admin/actions";
+import { ADMIN_BASE_PATH } from "@/lib/admin/config";
 import { cn } from "@/lib/utils";
 
 /**
  * Navegación del panel, reducida a lo esencial para que sea simple de usar:
  * contenido del sitio (Inicio, Sobre mí), Regalos, FAQ, mensajes y ajustes.
+ * Las rutas se derivan de ADMIN_BASE_PATH (ruta secreta del panel).
  */
 const nav = [
-  { href: "/admin", label: "Panel", icon: LayoutDashboard },
-  { href: "/admin/inicio", label: "Página de inicio", icon: Home },
-  { href: "/admin/sobre-mi", label: "Sobre mí", icon: UserRound },
-  { href: "/admin/servicios", label: "Servicios", icon: Sparkles },
-  { href: "/admin/regalos", label: "Regalos", icon: Gift },
-  { href: "/admin/faq", label: "Preguntas frecuentes", icon: HelpCircle },
-  { href: "/admin/formularios", label: "Formularios", icon: Inbox },
-  { href: "/admin/configuracion", label: "Ajustes", icon: Settings },
+  { href: ADMIN_BASE_PATH, label: "Panel", icon: LayoutDashboard },
+  { href: `${ADMIN_BASE_PATH}/inicio`, label: "Página de inicio", icon: Home },
+  { href: `${ADMIN_BASE_PATH}/sobre-mi`, label: "Sobre mí", icon: UserRound },
+  { href: `${ADMIN_BASE_PATH}/servicios`, label: "Servicios", icon: Sparkles },
+  { href: `${ADMIN_BASE_PATH}/regalos`, label: "Regalos", icon: Gift },
+  {
+    href: `${ADMIN_BASE_PATH}/faq`,
+    label: "Preguntas frecuentes",
+    icon: HelpCircle,
+  },
+  { href: `${ADMIN_BASE_PATH}/formularios`, label: "Formularios", icon: Inbox },
+  {
+    href: `${ADMIN_BASE_PATH}/configuracion`,
+    label: "Ajustes",
+    icon: Settings,
+  },
 ];
 
 export function AdminSidebar() {
@@ -47,7 +57,7 @@ export function AdminSidebar() {
   const items = (
     <>
       <div className="flex items-center justify-between px-2">
-        <Link href="/admin" className="block">
+        <Link href={ADMIN_BASE_PATH} className="block">
           <span className="font-display text-2xl font-semibold text-ink">
             FS<span className="text-gold-500">.</span>
           </span>
@@ -68,8 +78,8 @@ export function AdminSidebar() {
       <nav className="mt-8 flex-1 space-y-1" aria-label="Secciones del panel">
         {nav.map((item) => {
           const active =
-            item.href === "/admin"
-              ? pathname === "/admin"
+            item.href === ADMIN_BASE_PATH
+              ? pathname === ADMIN_BASE_PATH
               : pathname.startsWith(item.href);
           return (
             <Link
