@@ -7,6 +7,7 @@ import {
   Inbox,
   LayoutDashboard,
   LogOut,
+  Mail,
   Menu,
   Settings,
   Sparkles,
@@ -22,8 +23,9 @@ import { cn } from "@/lib/utils";
 
 /**
  * Navegación del panel, reducida a lo esencial para que sea simple de usar:
- * contenido del sitio (Inicio, Sobre mí), Regalos, FAQ, mensajes y ajustes.
- * Las rutas se derivan de ADMIN_BASE_PATH (ruta secreta del panel).
+ * contenido del sitio (Inicio, Sobre mí, Servicios, Regalos, FAQ, Contacto),
+ * mensajes y ajustes. Las rutas se derivan de ADMIN_BASE_PATH (ruta secreta
+ * del panel).
  */
 const nav = [
   { href: ADMIN_BASE_PATH, label: "Panel", icon: LayoutDashboard },
@@ -36,6 +38,7 @@ const nav = [
     label: "Preguntas frecuentes",
     icon: HelpCircle,
   },
+  { href: `${ADMIN_BASE_PATH}/contacto`, label: "Contacto", icon: Mail },
   { href: `${ADMIN_BASE_PATH}/formularios`, label: "Formularios", icon: Inbox },
   {
     href: `${ADMIN_BASE_PATH}/configuracion`,

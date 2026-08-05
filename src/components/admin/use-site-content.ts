@@ -18,6 +18,11 @@ export function useSiteContent<T>(key: string, fallback: T) {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [configured, setConfigured] = useState(true);
+  // Snapshot de lo último cargado/guardado: permite detectar cambios sin
+  // guardar (aviso al cancelar, al restaurar y al cerrar la pestaña).
+  const [savedSnapshot, setSavedSnapshot] = useState<string>(
+    JSON.stringify(fallback),
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -25,7 +30,11 @@ export function useSiteContent<T>(key: string, fallback: T) {
       if (cancelled) return;
       if (loadError === "not_configured") setConfigured(false);
       else if (loadError && loadError !== "no_session") setError(loadError);
-      if (data) setValue({ ...fallback, ...(data as T) });
+      if (data) {
+        const merged = { ...fallback, ...(data as T) };
+        setValue(merged);
+        setSavedSnapshot(JSON.stringify(merged));
+      }
       setLoading(false);
     });
     return () => {
@@ -33,6 +42,18 @@ export function useSiteContent<T>(key: string, fallback: T) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
+
+  const isDirty = JSON.stringify(value) !== savedSnapshot;
+
+  useEffect(() => {
+    if (!isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
 
   const save = useCallback(async () => {
     setSaving(true);
@@ -42,6 +63,7 @@ export function useSiteContent<T>(key: string, fallback: T) {
     setSaving(false);
     if (!saveError) {
       setSaved(true);
+      setSavedSnapshot(JSON.stringify(value));
       setTimeout(() => setSaved(false), 2500);
       return true;
     }
@@ -55,10 +77,43 @@ export function useSiteContent<T>(key: string, fallback: T) {
     return false;
   }, [key, value]);
 
+  /** Descarta los cambios sin guardar y vuelve al último valor guardado. */
+  const cancel = useCallback(() => {
+    if (isDirty && !confirm("Tenés cambios sin guardar. ¿Descartarlos?")) {
+      return;
+    }
+    setValue(JSON.parse(savedSnapshot) as T);
+    setError(null);
+  }, [isDirty, savedSnapshot]);
+
+  /**
+   * Reemplaza el valor actual (sin guardar) por el contenido de fábrica.
+   * La administradora sigue teniendo que tocar "Guardar cambios" para
+   * confirmarlo — no escribe en la base de datos por sí sola.
+   */
+  const restoreDefault = useCallback(
+    (section?: string) => {
+      const label = section ? `«${section}»` : "esta sección";
+      if (!confirm(`¿Restaurar ${label} al contenido predeterminado?`)) {
+        return;
+      }
+      setValue(fallback);
+      setError(null);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
   return {
     value,
     setValue,
     save,
+    cancel,
+    restoreDefault,
+    isDirty,
+    /** Último valor guardado (o el de fábrica, si nunca se guardó). Útil
+     * para combinar varias secciones en un único botón "Cancelar". */
+    lastSaved: JSON.parse(savedSnapshot) as T,
     loading,
     saving,
     saved,

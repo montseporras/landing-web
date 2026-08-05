@@ -180,6 +180,54 @@ export function NotConfigured() {
   );
 }
 
+/** Botón para descartar cambios sin guardar y volver al último valor guardado. */
+export function CancelButton({
+  onClick,
+  label = "Cancelar",
+}: {
+  onClick: () => void;
+  label?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="h-11 rounded-full border border-sand-300 px-5 text-sm text-muted hover:border-sand-400"
+    >
+      {label}
+    </button>
+  );
+}
+
+/** Botón para restaurar una sección al contenido predeterminado (con confirmación). */
+export function RestoreDefaultButton({
+  onClick,
+  label = "Restaurar predeterminado",
+}: {
+  onClick: () => void;
+  label?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="h-11 rounded-full border border-sand-300 px-5 text-sm text-muted hover:border-gold-400 hover:text-gold-600"
+    >
+      {label}
+    </button>
+  );
+}
+
+/** Aviso de cambios sin guardar en el formulario actual. */
+export function UnsavedNotice({ show }: { show: boolean }) {
+  if (!show) return null;
+  return (
+    <p className="flex items-center gap-1.5 text-xs font-medium text-gold-600">
+      Tenés cambios sin guardar.
+    </p>
+  );
+}
+
 /** Campo con etiqueta para formularios del panel. */
 export function Field({
   label,

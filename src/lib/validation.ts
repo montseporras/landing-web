@@ -57,4 +57,7 @@ export const LIMITS = {
   description: 2000,
   answer: 4000,
   url: 500,
+  /** Límite de campos de texto enriquecido: cuenta el HTML final (con
+   * etiquetas), por eso es más generoso que los límites de texto plano. */
+  richText: 20000,
 } as const;

@@ -4,7 +4,13 @@ import { FinalCta } from "@/components/sections/final-cta";
 import { HowItWorks } from "@/components/sections/how-it-works";
 import { PageHeader } from "@/components/sections/page-header";
 import { ServicesCards } from "@/components/sections/services-cards";
-import { getFaqs, getHowItWorks, getServices } from "@/lib/content/queries";
+import {
+  getFaqs,
+  getHomeSections,
+  getHowItWorks,
+  getServices,
+  getServicesPage,
+} from "@/lib/content/queries";
 
 export const revalidate = 300;
 
@@ -16,24 +22,27 @@ export const metadata: Metadata = {
 };
 
 export default async function ServiciosPage() {
-  const [services, howItWorks, faqs] = await Promise.all([
+  const [services, howItWorks, faqs, page, homeSections] = await Promise.all([
     getServices(),
     getHowItWorks(),
     getFaqs(),
+    getServicesPage(),
+    getHomeSections(),
   ]);
+  const { header } = page;
 
   return (
     <>
       <PageHeader
-        eyebrow="Servicios"
-        title="Un acompañamiento a la medida de"
-        accent="tu momento"
-        description="Todos los procesos son online, confidenciales y combinan coaching, inteligencia emocional y neurociencia aplicada. Elegí el formato que mejor se adapte a vos."
+        eyebrow={header.eyebrow}
+        title={header.title}
+        accent={header.titleAccent}
+        description={header.description}
       />
       <ServicesCards services={services} showHeading={false} />
-      <HowItWorks steps={howItWorks} />
-      <FaqSection faqs={faqs.slice(0, 4)} />
-      <FinalCta />
+      <HowItWorks steps={howItWorks} header={homeSections.howItWorks} />
+      <FaqSection faqs={faqs.slice(0, 4)} header={homeSections.faq} />
+      <FinalCta content={homeSections.finalCta} />
     </>
   );
 }

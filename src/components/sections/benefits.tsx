@@ -1,5 +1,6 @@
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { DynamicIcon } from "@/components/ui/icon";
+import type { SectionHeader } from "@/lib/types";
 
 interface Benefit {
   icon: string;
@@ -7,20 +8,25 @@ interface Benefit {
   description: string;
 }
 
-export function Benefits({ items }: { items: Benefit[] }) {
+export function Benefits({
+  items,
+  header,
+}: {
+  items: Benefit[];
+  header: SectionHeader;
+}) {
   return (
     <section id="beneficios" className="py-24 md:py-32">
       <div className="container-content">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <p className="eyebrow mb-4">Lo que vas a lograr</p>
+          <p className="eyebrow mb-4">{header.eyebrow}</p>
           <h2 className="text-display-lg text-balance text-ink">
-            Un método para sentirte bien{" "}
-            <em className="font-light italic text-gold-600">de verdad</em>
+            {header.title}{" "}
+            <em className="font-light italic text-gold-600">
+              {header.titleAccent}
+            </em>
           </h2>
-          <p className="prose-fs mt-5">
-            No se trata de pensar en positivo: se trata de entender tu mente y
-            entrenarla a tu favor.
-          </p>
+          <p className="prose-fs mt-5">{header.subtitle}</p>
         </Reveal>
 
         <Stagger className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

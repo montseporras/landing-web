@@ -1,7 +1,8 @@
 import { Reveal } from "@/components/motion/reveal";
 import { Button } from "@/components/ui/button";
+import type { FinalCtaContent } from "@/lib/types";
 
-export function FinalCta() {
+export function FinalCta({ content }: { content: FinalCtaContent }) {
   return (
     <section className="relative overflow-hidden py-28 md:py-36">
       {/* Bloque visual */}
@@ -14,35 +15,31 @@ export function FinalCta() {
               <div className="absolute -bottom-24 -right-16 h-80 w-80 rounded-full bg-gold-500/20 blur-3xl" />
             </div>
 
-            <p className="eyebrow relative text-gold-300">
-              Tu momento es ahora
-            </p>
+            <p className="eyebrow relative text-gold-300">{content.eyebrow}</p>
             <h2 className="text-display-lg relative mx-auto mt-5 max-w-2xl text-balance text-cream">
-              La vida que querés empieza en{" "}
+              {content.title}{" "}
               <em className="font-light italic text-gold-300">
-                cómo te sentís
+                {content.titleAccent}
               </em>
             </h2>
             <p className="text-justify-soft relative mx-auto mt-6 max-w-xl text-base leading-relaxed text-cream/70">
-              Reservá tu llamada de claridad gratuita de 30 minutos. Sin
-              compromiso, sin presión: solo una conversación honesta sobre dónde
-              estás y hacia dónde querés ir.
+              {content.description}
             </p>
             <div className="relative mt-10 flex flex-wrap justify-center gap-4">
               <Button
-                href="/contacto"
+                href={content.primaryCta.href}
                 variant="lila"
                 size="lg"
                 className="shadow-lifted"
               >
-                Reservar mi llamada gratuita
+                {content.primaryCta.label}
               </Button>
               <Button
-                href="/regalos"
+                href={content.secondaryCta.href}
                 size="lg"
                 className="border border-lavender-200/30 bg-transparent text-cream hover:border-lavender-200/60 hover:bg-cream/10"
               >
-                Prefiero empezar por un regalo
+                {content.secondaryCta.label}
               </Button>
             </div>
           </div>

@@ -1,13 +1,30 @@
 import type {
   AboutContent,
+  AboutSections,
+  ContactPageContent,
   Faq,
+  FaqPageContent,
+  FooterCta,
   GeneralSettings,
   Gift,
+  GiftsPageContent,
   HeroContent,
+  HomeSections,
+  RichText,
   SeoSettings,
   Service,
+  ServicesPageContent,
   SocialLinks,
 } from "@/lib/types";
+
+/** Envuelve texto plano en un párrafo de texto enriquecido, alineado a la izquierda. */
+function rich(text: string): RichText {
+  const escaped = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  return { html: `<p>${escaped}</p>`, align: "left" };
+}
 
 /**
  * Contenido por defecto del sitio.
@@ -71,11 +88,15 @@ export const defaultBenefits = [
 export const defaultAbout: AboutContent = {
   eyebrow: "Sobre mí",
   title: "Hola, soy Francis",
-  bio: "Coach especializada en gestión emocional, inteligencia emocional y neurociencia aplicada al desarrollo personal. Acompaño procesos de transformación profundos, humanos y sin fórmulas vacías.",
-  story:
+  bio: rich(
+    "Coach especializada en gestión emocional, inteligencia emocional y neurociencia aplicada al desarrollo personal. Acompaño procesos de transformación profundos, humanos y sin fórmulas vacías.",
+  ),
+  story: rich(
     "Durante años hice todo «bien» — estudié, trabajé, cumplí — y aun así sentía que vivía en piloto automático, con una autoexigencia que no descansaba nunca. Mi propio proceso de terapia, formación en coaching y estudio de la neurociencia me enseñó algo que hoy es el corazón de mi trabajo: no necesitás convertirte en otra persona, necesitás volver a vos. Desde entonces acompañé a cientos de personas a hacer ese mismo viaje: del ruido mental a la calma, de la autocrítica al amor propio, del miedo a la confianza.",
-  mission:
+  ),
+  mission: rich(
     "Mi misión es que tengas herramientas concretas para gestionar tus emociones y construir una vida que se sienta tuya — con ciencia, con calidez y sin juicio.",
+  ),
   values: [
     {
       title: "Calidez sin juicio",
@@ -136,7 +157,8 @@ export const defaultServices: Service[] = [
     id: "s1",
     title: "Proceso individual 1:1",
     description:
-      "Un acompañamiento personalizado de 3 meses para trabajar en profundidad tu gestión emocional, confianza y amor propio.",
+      "<p>Un acompañamiento personalizado de 3 meses para trabajar en profundidad tu gestión emocional, confianza y amor propio.</p>",
+    description_align: "left",
     features: [
       "12 sesiones online de 60 minutos",
       "Plan de trabajo 100% personalizado",
@@ -155,7 +177,8 @@ export const defaultServices: Service[] = [
     id: "s2",
     title: "Sesión de claridad puntual",
     description:
-      "Una sesión intensiva de 90 minutos para destrabar una situación concreta: una decisión, un conflicto, un momento de ansiedad.",
+      "<p>Una sesión intensiva de 90 minutos para destrabar una situación concreta: una decisión, un conflicto, un momento de ansiedad.</p>",
+    description_align: "left",
     features: [
       "90 minutos de trabajo enfocado",
       "Herramientas aplicables desde el día uno",
@@ -173,7 +196,8 @@ export const defaultServices: Service[] = [
     id: "s3",
     title: "Coaching Organizacional",
     description:
-      "Acompañamiento para empresas e instituciones: capacitaciones corporativas e intervenciones que fortalecen el liderazgo, la comunicación efectiva y el bienestar de los equipos.",
+      "<p>Acompañamiento para empresas e instituciones: capacitaciones corporativas e intervenciones que fortalecen el liderazgo, la comunicación efectiva y el bienestar de los equipos.</p>",
+    description_align: "left",
     features: [
       "Desarrollo de liderazgo y formación de equipos",
       "Inteligencia emocional aplicada al trabajo",
@@ -195,7 +219,8 @@ export const defaultGifts: Gift[] = [
     id: "g1",
     title: "Calma: guía práctica de gestión emocional",
     description:
-      "Mi ebook con el método de 5 pasos que uso con mis clientes para pasar del caos emocional a la calma. Incluye ejercicios, plantillas y un plan de 7 días.",
+      "<p>Mi ebook con el método de 5 pasos que uso con mis clientes para pasar del caos emocional a la calma. Incluye ejercicios, plantillas y un plan de 7 días.</p>",
+    description_align: "left",
     category: "ebook",
     image: null,
     file_url: null,
@@ -210,7 +235,8 @@ export const defaultGifts: Gift[] = [
     id: "g2",
     title: "Meditación guiada: volver al cuerpo",
     description:
-      "Audio de 12 minutos para soltar el ruido mental y volver al presente. Ideal para empezar o cerrar el día.",
+      "<p>Audio de 12 minutos para soltar el ruido mental y volver al presente. Ideal para empezar o cerrar el día.</p>",
+    description_align: "left",
     category: "meditacion",
     image: null,
     file_url: null,
@@ -225,7 +251,8 @@ export const defaultGifts: Gift[] = [
     id: "g3",
     title: "Checklist: tu botiquín emocional",
     description:
-      "Una lista imprimible con recursos rápidos para días difíciles: qué hacer, qué evitar y a quién llamar.",
+      "<p>Una lista imprimible con recursos rápidos para días difíciles: qué hacer, qué evitar y a quién llamar.</p>",
+    description_align: "left",
     category: "checklist",
     image: null,
     file_url: null,
@@ -240,7 +267,8 @@ export const defaultGifts: Gift[] = [
     id: "g4",
     title: "Plantilla: diario de emociones semanal",
     description:
-      "Registrá tus emociones, disparadores y aprendizajes semana a semana con esta plantilla lista para imprimir.",
+      "<p>Registrá tus emociones, disparadores y aprendizajes semana a semana con esta plantilla lista para imprimir.</p>",
+    description_align: "left",
     category: "plantilla",
     image: null,
     file_url: null,
@@ -255,7 +283,8 @@ export const defaultGifts: Gift[] = [
     id: "g5",
     title: "Audio: respiración para calmar la ansiedad",
     description:
-      "Una práctica de respiración guiada de 6 minutos, basada en neurociencia, para usar en cualquier momento.",
+      "<p>Una práctica de respiración guiada de 6 minutos, basada en neurociencia, para usar en cualquier momento.</p>",
+    description_align: "left",
     category: "audio",
     image: null,
     file_url: null,
@@ -270,7 +299,8 @@ export const defaultGifts: Gift[] = [
     id: "g6",
     title: "Guía: conversaciones difíciles sin explotar",
     description:
-      "Un guion paso a paso para comunicar límites con calma y firmeza, sin culpa y sin discusiones eternas.",
+      "<p>Un guion paso a paso para comunicar límites con calma y firmeza, sin culpa y sin discusiones eternas.</p>",
+    description_align: "left",
     category: "guia",
     image: null,
     file_url: null,
@@ -314,7 +344,8 @@ export const defaultFaqs: Faq[] = [
     id: "f1",
     question: "¿Qué diferencia hay entre coaching y terapia?",
     answer:
-      "La terapia trabaja principalmente sanando el pasado y tratando cuadros clínicos; el coaching trabaja desde tu presente hacia tus objetivos. Yo trabajo con personas funcionales que quieren mejorar su gestión emocional, confianza y claridad. Si en el proceso detecto que necesitás apoyo terapéutico, te lo digo con honestidad y puedo derivarte con profesionales de confianza.",
+      "<p>La terapia trabaja principalmente sanando el pasado y tratando cuadros clínicos; el coaching trabaja desde tu presente hacia tus objetivos. Yo trabajo con personas funcionales que quieren mejorar su gestión emocional, confianza y claridad. Si en el proceso detecto que necesitás apoyo terapéutico, te lo digo con honestidad y puedo derivarte con profesionales de confianza.</p>",
+    answer_align: "left",
     active: true,
     sort_order: 1,
   },
@@ -322,7 +353,8 @@ export const defaultFaqs: Faq[] = [
     id: "f2",
     question: "¿Cómo son las sesiones?",
     answer:
-      "Son encuentros online de 60 minutos por videollamada, en un espacio 100% confidencial. Combinamos conversación profunda con herramientas prácticas de coaching, inteligencia emocional y neurociencia. Entre sesiones te llevás ejercicios concretos para aplicar lo trabajado.",
+      "<p>Son encuentros online de 60 minutos por videollamada, en un espacio 100% confidencial. Combinamos conversación profunda con herramientas prácticas de coaching, inteligencia emocional y neurociencia. Entre sesiones te llevás ejercicios concretos para aplicar lo trabajado.</p>",
+    answer_align: "left",
     active: true,
     sort_order: 2,
   },
@@ -330,7 +362,8 @@ export const defaultFaqs: Faq[] = [
     id: "f3",
     question: "¿Cuánto dura un proceso?",
     answer:
-      "El proceso individual completo dura 3 meses, con una sesión semanal. Es el tiempo que la evidencia y mi experiencia muestran necesario para instalar nuevos hábitos emocionales. También ofrezco sesiones puntuales de claridad para temas específicos.",
+      "<p>El proceso individual completo dura 3 meses, con una sesión semanal. Es el tiempo que la evidencia y mi experiencia muestran necesario para instalar nuevos hábitos emocionales. También ofrezco sesiones puntuales de claridad para temas específicos.</p>",
+    answer_align: "left",
     active: true,
     sort_order: 3,
   },
@@ -338,7 +371,8 @@ export const defaultFaqs: Faq[] = [
     id: "f4",
     question: "¿La primera llamada tiene costo?",
     answer:
-      "No. La llamada de claridad de 30 minutos es gratuita y sin compromiso. Sirve para conocernos, entender tu momento y ver si puedo ayudarte. Si no soy la persona indicada, te lo digo.",
+      "<p>No. La llamada de claridad de 30 minutos es gratuita y sin compromiso. Sirve para conocernos, entender tu momento y ver si puedo ayudarte. Si no soy la persona indicada, te lo digo.</p>",
+    answer_align: "left",
     active: true,
     sort_order: 4,
   },
@@ -346,7 +380,8 @@ export const defaultFaqs: Faq[] = [
     id: "f5",
     question: "¿Trabajás con hombres también?",
     answer:
-      "Sí. Aunque gran parte de mi comunidad son mujeres, acompaño a cualquier persona comprometida con su desarrollo emocional. Las emociones no tienen género.",
+      "<p>Sí. Aunque gran parte de mi comunidad son mujeres, acompaño a cualquier persona comprometida con su desarrollo emocional. Las emociones no tienen género.</p>",
+    answer_align: "left",
     active: true,
     sort_order: 5,
   },
@@ -354,7 +389,8 @@ export const defaultFaqs: Faq[] = [
     id: "f6",
     question: "¿Qué pasa si necesito reprogramar una sesión?",
     answer:
-      "Podés reprogramar sin costo avisando con al menos 24 horas de anticipación. La vida pasa, y el proceso está diseñado para adaptarse a ella.",
+      "<p>Podés reprogramar sin costo avisando con al menos 24 horas de anticipación. La vida pasa, y el proceso está diseñado para adaptarse a ella.</p>",
+    answer_align: "left",
     active: true,
     sort_order: 6,
   },
@@ -385,4 +421,124 @@ export const defaultGeneral: GeneralSettings = {
   footerText:
     "Acompaño a personas a gestionar sus emociones, reconstruir su confianza y vivir con más calma y amor propio.",
   legalName: "Francis Salazar Coaching",
+};
+
+/** Encabezados de las secciones de la página de inicio. */
+export const defaultHomeSections: HomeSections = {
+  benefits: {
+    eyebrow: "Lo que vas a lograr",
+    title: "Un método para sentirte bien",
+    titleAccent: "de verdad",
+    subtitle:
+      "No se trata de pensar en positivo: se trata de entender tu mente y entrenarla a tu favor.",
+  },
+  howItWorks: {
+    eyebrow: "Cómo trabajamos",
+    title: "Camino Claro,",
+    titleAccent: "Paso a Paso",
+    subtitle:
+      "Un proceso simple y transparente, diseñado para que sepas exactamente qué esperar en cada etapa.",
+  },
+  services: {
+    eyebrow: "Servicios",
+    title: "Formas de trabajar",
+    titleAccent: "juntas",
+    subtitle:
+      "Cada proceso está diseñado para tu momento: profundidad cuando la necesitás, claridad cuando la buscás.",
+  },
+  giftsTeaser: {
+    eyebrow: "Regalos para vos",
+    title: "Empezá hoy, con un",
+    titleAccent: "regalo",
+    subtitle:
+      "Guías, meditaciones y plantillas gratuitas para dar el primer paso a tu ritmo.",
+  },
+  faq: {
+    eyebrow: "Preguntas frecuentes",
+    title: "Todo lo que querés",
+    titleAccent: "saber",
+    subtitle:
+      "Si tu pregunta no está acá, escribime sin vergüenza: respondo personalmente cada mensaje.",
+  },
+  finalCta: {
+    eyebrow: "Tu momento es ahora",
+    title: "La vida que querés empieza en",
+    titleAccent: "cómo te sentís",
+    description:
+      "Reservá tu llamada de claridad gratuita de 30 minutos. Sin compromiso, sin presión: solo una conversación honesta sobre dónde estás y hacia dónde querés ir.",
+    primaryCta: { label: "Reservar mi llamada gratuita", href: "/contacto" },
+    secondaryCta: {
+      label: "Prefiero empezar por un regalo",
+      href: "/regalos",
+    },
+  },
+};
+
+/** Encabezados de "Sobre mí" que no forman parte de `about`. */
+export const defaultAboutSections: AboutSections = {
+  storyHeading: "Mi historia",
+  valuesHeader: {
+    eyebrow: "Mis valores",
+    title: "Cómo trabajo",
+    titleAccent: "con vos",
+  },
+  galleryHeader: { eyebrow: "Galería", title: "Detrás de escena" },
+};
+
+export const defaultServicesPage: ServicesPageContent = {
+  header: {
+    eyebrow: "Servicios",
+    title: "Un acompañamiento a la medida de",
+    titleAccent: "tu momento",
+    description:
+      "Todos los procesos son online, confidenciales y combinan coaching, inteligencia emocional y neurociencia aplicada. Elegí el formato que mejor se adapte a vos.",
+  },
+};
+
+export const defaultGiftsPage: GiftsPageContent = {
+  header: {
+    eyebrow: "Regalos",
+    title: "Herramientas gratuitas, creadas",
+    titleAccent: "para vos",
+    description:
+      "Guías, meditaciones, plantillas y checklists que uso con mis clientes, disponibles sin costo. Elegí el que tu momento necesita y descargalo.",
+  },
+};
+
+export const defaultFaqPage: FaqPageContent = {
+  header: {
+    eyebrow: "FAQ",
+    title: "Preguntas",
+    titleAccent: "frecuentes",
+    description:
+      "Todo lo que necesitás saber antes de empezar tu proceso. Si algo no está acá, escribime.",
+  },
+};
+
+export const defaultContactPage: ContactPageContent = {
+  header: {
+    eyebrow: "Contacto",
+    title: "Demos el primer paso,",
+    titleAccent: "juntas",
+    description:
+      "Reservá tu llamada de claridad gratuita o escribime lo que necesites. Leo y respondo personalmente cada mensaje, en menos de 48 horas.",
+  },
+  channelBlurbs: {
+    whatsapp: "La vía más rápida para consultas breves.",
+    email: "Para consultas más largas o propuestas.",
+    instagram: "Contenido diario y mensajes directos.",
+  },
+  note: {
+    title: "Un detalle importante",
+    text: "Tu información es 100% confidencial. Nunca comparto datos y solo te escribo para responder tu consulta.",
+  },
+};
+
+/** Bloque CTA de la columna derecha del footer. */
+export const defaultFooterCta: FooterCta = {
+  eyebrow: "¿Empezamos?",
+  title: "Reservá tu llamada de claridad",
+  text: "30 minutos, gratis y sin compromiso, para conocernos y ver cómo puedo acompañarte.",
+  buttonLabel: "Reservar llamada",
+  buttonHref: "/contacto",
 };

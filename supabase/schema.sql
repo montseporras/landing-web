@@ -222,3 +222,57 @@ end $$;
 --
 -- -- 5) Los servicios venían de site_content; ese registro ya no se usa
 -- delete from public.site_content where key = 'services';
+
+-- ═══════════════════════════════════════════════════════════════════
+--  Desde v5 → v6  (EJECUTAR ESTO si ya tenías la base creada en v5)
+--  Copiá y ejecutá este bloque completo en el SQL Editor de Supabase.
+--
+--  Agrega el CMS de texto enriquecido (negrita, cursiva, listas, enlaces,
+--  alineación) para "Sobre mí" (biografía/historia/misión) y el campo de
+--  descripción/respuesta de Servicios, Regalos y Preguntas frecuentes.
+--
+--  100% aditivo: ninguna columna ni fila existente se modifica ni se borra.
+--  Los textos que ya tenías cargados siguen siendo válidos tal cual están
+--  (un texto sin etiquetas HTML es contenido enriquecido válido: se muestra
+--  como un párrafo simple, sin negrita ni listas, hasta que lo edites).
+-- ═══════════════════════════════════════════════════════════════════
+-- -- 1) Alineación del texto enriquecido de cada entidad (por defecto: izquierda)
+-- alter table public.services add column if not exists description_align text not null default 'left';
+-- alter table public.services drop constraint if exists services_description_align_check;
+-- alter table public.services add constraint services_description_align_check
+--   check (description_align in ('left','center','right','justify'));
+--
+-- alter table public.gifts add column if not exists description_align text not null default 'left';
+-- alter table public.gifts drop constraint if exists gifts_description_align_check;
+-- alter table public.gifts add constraint gifts_description_align_check
+--   check (description_align in ('left','center','right','justify'));
+--
+-- alter table public.faqs add column if not exists answer_align text not null default 'left';
+-- alter table public.faqs drop constraint if exists faqs_answer_align_check;
+-- alter table public.faqs add constraint faqs_answer_align_check
+--   check (answer_align in ('left','center','right','justify'));
+--
+-- -- 2) "Tripwire" de base de datos: además de que la app sanea el HTML antes
+-- --    de guardar (allowlist estricta) y de nuevo antes de mostrarlo, esta
+-- --    restricción es una segunda red de contención muy barata a nivel de
+-- --    base de datos ante un futuro bug de la app o una edición manual por
+-- --    SQL. No reemplaza el saneamiento de la aplicación (un filtro por
+-- --    expresión regular NO es, por sí solo, una defensa suficiente contra
+-- --    XSS), es una capa adicional gratuita.
+-- alter table public.services drop constraint if exists services_description_no_script_check;
+-- alter table public.services add constraint services_description_no_script_check
+--   check (description !~* '<script|<iframe|<object|<embed|javascript:|on[a-z]+\s*=');
+--
+-- alter table public.gifts drop constraint if exists gifts_description_no_script_check;
+-- alter table public.gifts add constraint gifts_description_no_script_check
+--   check (description !~* '<script|<iframe|<object|<embed|javascript:|on[a-z]+\s*=');
+--
+-- alter table public.faqs drop constraint if exists faqs_answer_no_script_check;
+-- alter table public.faqs add constraint faqs_answer_no_script_check
+--   check (answer !~* '<script|<iframe|<object|<embed|javascript:|on[a-z]+\s*=');
+--
+-- -- 3) El contenido enriquecido de "Sobre mí" (biografía/historia/misión) y
+-- --    los nuevos encabezados de página (home, servicios, regalos, FAQ,
+-- --    contacto, footer) siguen viviendo en site_content — no necesitan
+-- --    columnas nuevas, se guardan la primera vez que se edita esa sección
+-- --    desde el panel (igual que siempre funcionó "hero", "about", etc.).

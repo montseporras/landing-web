@@ -4,30 +4,32 @@ import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DynamicIcon } from "@/components/ui/icon";
+import { RichTextView } from "@/components/ui/rich-text";
 import { cn } from "@/lib/utils";
-import type { Service } from "@/lib/types";
+import type { SectionHeader, Service } from "@/lib/types";
 
 export function ServicesCards({
   services,
+  header,
   showHeading = true,
 }: {
   services: Service[];
+  header?: SectionHeader;
   showHeading?: boolean;
 }) {
   return (
     <section className="py-24 md:py-32" id="servicios">
       <div className="container-content">
-        {showHeading && (
+        {showHeading && header && (
           <Reveal className="mx-auto max-w-2xl text-center">
-            <p className="eyebrow mb-4">Servicios</p>
+            <p className="eyebrow mb-4">{header.eyebrow}</p>
             <h2 className="text-display-lg text-balance text-ink">
-              Formas de trabajar{" "}
-              <em className="font-light italic text-gold-600">juntas</em>
+              {header.title}{" "}
+              <em className="font-light italic text-gold-600">
+                {header.titleAccent}
+              </em>
             </h2>
-            <p className="prose-fs mt-5">
-              Cada proceso está diseñado para tu momento: profundidad cuando la
-              necesitás, claridad cuando la buscás.
-            </p>
+            <p className="prose-fs mt-5">{header.subtitle}</p>
           </Reveal>
         )}
 
@@ -65,9 +67,11 @@ export function ServicesCards({
                 <h3 className="mt-6 font-display text-2xl text-ink">
                   {service.title}
                 </h3>
-                <p className="text-justify-soft mt-3 text-sm leading-relaxed text-muted">
-                  {service.description}
-                </p>
+                <RichTextView
+                  html={service.description}
+                  align={service.description_align}
+                  className="mt-3 text-sm leading-relaxed text-muted"
+                />
                 <ul className="mt-6 flex-1 space-y-3">
                   {service.features.map((feature) => (
                     <li

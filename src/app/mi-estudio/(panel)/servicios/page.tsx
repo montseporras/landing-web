@@ -1,7 +1,19 @@
 "use client";
 
+import { PageHeaderEditor } from "@/components/admin/content-editors";
 import { EntityManager } from "@/components/admin/entity-manager";
-import { AdminHeader } from "@/components/admin/ui";
+import {
+  AdminHeader,
+  CancelButton,
+  ErrorNotice,
+  NotConfigured,
+  RestoreDefaultButton,
+  SaveButton,
+  UnsavedNotice,
+} from "@/components/admin/ui";
+import { useSiteContent } from "@/components/admin/use-site-content";
+import { Skeleton } from "@/components/ui/skeleton";
+import { defaultServicesPage } from "@/lib/content/defaults";
 import { IMAGE_SPECS } from "@/lib/media";
 
 /** Íconos disponibles para las tarjetas de servicios (nombres de Lucide). */
@@ -19,12 +31,45 @@ const ICON_OPTIONS = [
 ];
 
 export default function AdminServiciosPage() {
+  const page = useSiteContent("services_page", defaultServicesPage);
+
   return (
     <>
       <AdminHeader
         title="Servicios"
-        description="Creá, editá, ordená y activá o desactivá los servicios que se muestran en el sitio. Los servicios de fábrica también aparecen acá y podés modificarlos por completo."
+        description="Encabezado de la página y el listado de servicios que se muestran en el sitio."
       />
+
+      {page.configured && !page.loading ? (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            page.save();
+          }}
+          className="mb-8 space-y-4"
+        >
+          <ErrorNotice message={page.error} />
+          <PageHeaderEditor
+            value={page.value.header}
+            onChange={(header) => page.setValue({ ...page.value, header })}
+          />
+          <UnsavedNotice show={page.isDirty} />
+          <div className="flex justify-end gap-3">
+            <RestoreDefaultButton
+              onClick={() => page.restoreDefault("Encabezado de Servicios")}
+            />
+            <CancelButton onClick={page.cancel} />
+            <SaveButton saving={page.saving} saved={page.saved} />
+          </div>
+        </form>
+      ) : page.loading ? (
+        <Skeleton className="mb-8 h-48" />
+      ) : (
+        <div className="mb-8">
+          <NotConfigured />
+        </div>
+      )}
+
       <EntityManager
         table="services"
         itemName="servicio"
@@ -34,7 +79,8 @@ export default function AdminServiciosPage() {
           {
             name: "description",
             label: "Descripción",
-            kind: "textarea",
+            kind: "richtext",
+            alignField: "description_align",
             required: true,
           },
           {

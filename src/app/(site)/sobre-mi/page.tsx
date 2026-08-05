@@ -6,7 +6,12 @@ import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { FinalCta } from "@/components/sections/final-cta";
 import { PageHeader } from "@/components/sections/page-header";
 import { Portrait } from "@/components/ui/portrait";
-import { getAbout } from "@/lib/content/queries";
+import { RichTextView } from "@/components/ui/rich-text";
+import {
+  getAbout,
+  getAboutSections,
+  getHomeSections,
+} from "@/lib/content/queries";
 
 export const revalidate = 300;
 
@@ -18,16 +23,22 @@ export const metadata: Metadata = {
 };
 
 export default async function SobreMiPage() {
-  const about = await getAbout();
+  const [about, sections, homeSections] = await Promise.all([
+    getAbout(),
+    getAboutSections(),
+    getHomeSections(),
+  ]);
   const gallery = about.gallery.filter(Boolean);
 
   return (
     <>
-      <PageHeader
-        eyebrow={about.eyebrow}
-        title={about.title}
-        description={about.bio}
-      />
+      <PageHeader eyebrow={about.eyebrow} title={about.title}>
+        <RichTextView
+          html={about.bio.html}
+          align={about.bio.align}
+          className="mt-6 max-w-2xl text-lg leading-relaxed text-muted"
+        />
+      </PageHeader>
 
       {/* Historia + foto */}
       <section className="pb-20 md:pb-28">
@@ -48,19 +59,29 @@ export default async function SobreMiPage() {
 
           <div>
             <Reveal>
-              <h2 className="text-display-md text-ink">Mi historia</h2>
-              <p className="prose-fs mt-5 whitespace-pre-line">{about.story}</p>
+              <h2 className="text-display-md text-ink">
+                {sections.storyHeading}
+              </h2>
+              <RichTextView
+                html={about.story.html}
+                align={about.story.align}
+                className="mt-5 text-[1.0625rem] leading-relaxed text-muted"
+              />
             </Reveal>
             <Reveal delay={0.1}>
               <div className="mt-8 rounded-3xl border-l-2 border-gold-400 bg-sand-50 p-6">
-                <p className="flex items-start gap-3 font-display text-lg italic leading-relaxed text-ink">
+                <div className="flex items-start gap-3">
                   <Heart
                     size={18}
                     className="mt-1.5 flex-none text-gold-500"
                     aria-hidden
                   />
-                  {about.mission}
-                </p>
+                  <RichTextView
+                    html={about.mission.html}
+                    align={about.mission.align}
+                    className="font-display text-lg italic leading-relaxed text-ink"
+                  />
+                </div>
               </div>
             </Reveal>
 
@@ -102,10 +123,12 @@ export default async function SobreMiPage() {
       <section className="py-20 md:py-28">
         <div className="container-content">
           <Reveal className="mx-auto max-w-2xl text-center">
-            <p className="eyebrow mb-4">Mis valores</p>
+            <p className="eyebrow mb-4">{sections.valuesHeader.eyebrow}</p>
             <h2 className="text-display-lg text-balance text-ink">
-              Cómo trabajo{" "}
-              <em className="font-light italic text-gold-600">con vos</em>
+              {sections.valuesHeader.title}{" "}
+              <em className="font-light italic text-gold-600">
+                {sections.valuesHeader.titleAccent}
+              </em>
             </h2>
           </Reveal>
           <Stagger className="mt-12 grid gap-6 sm:grid-cols-2 md:mt-14 lg:grid-cols-3">
@@ -130,8 +153,10 @@ export default async function SobreMiPage() {
         <section className="pb-20 md:pb-28">
           <div className="container-content">
             <Reveal>
-              <p className="eyebrow mb-4">Galería</p>
-              <h2 className="text-display-md text-ink">Detrás de escena</h2>
+              <p className="eyebrow mb-4">{sections.galleryHeader.eyebrow}</p>
+              <h2 className="text-display-md text-ink">
+                {sections.galleryHeader.title}
+              </h2>
             </Reveal>
             <Stagger className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-3">
               {gallery.map((src, i) => (
@@ -152,7 +177,7 @@ export default async function SobreMiPage() {
         </section>
       )}
 
-      <FinalCta />
+      <FinalCta content={homeSections.finalCta} />
     </>
   );
 }

@@ -14,9 +14,11 @@ import {
 import {
   ALLOWED_CONTENT_KEYS,
   ALLOWED_TABLES,
+  sanitizeContentPayload,
   sanitizePayload,
 } from "@/lib/admin/tables";
 import {
+  defaultAbout,
   defaultFaqs,
   defaultGifts,
   defaultServices,
@@ -24,8 +26,26 @@ import {
 import { logError, logWarn } from "@/lib/log";
 import { fileExtension, validateUpload } from "@/lib/media";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
+import { coerceRichText } from "@/lib/sanitize-html";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { cleanText } from "@/lib/validation";
+
+/**
+ * `about.bio/story/mission` pasaron de texto plano a texto enriquecido en la
+ * v6. Normaliza filas guardadas ANTES de ese cambio para que el panel las
+ * muestre en el editor en vez de un campo vacío — mismo mecanismo que
+ * `getAbout()` usa para el sitio público (`src/lib/content/queries.ts`).
+ */
+function coerceContentOnRead(key: string, value: unknown): unknown {
+  if (key !== "about" || !value || typeof value !== "object") return value;
+  const v = value as Record<string, unknown>;
+  return {
+    ...v,
+    bio: coerceRichText(v.bio, defaultAbout.bio),
+    story: coerceRichText(v.story, defaultAbout.story),
+    mission: coerceRichText(v.mission, defaultAbout.mission),
+  };
+}
 
 /**
  * API del panel de administración.
@@ -221,7 +241,7 @@ export async function adminGetContent(key: string): Promise<AdminResult> {
     logError(`adminGetContent(${key})`, error.message);
     return { data: null, error: GENERIC_LOAD_ERROR };
   }
-  return { data: data?.value ?? null, error: null };
+  return { data: coerceContentOnRead(key, data?.value ?? null), error: null };
 }
 
 export async function adminUpsertContent(
@@ -250,9 +270,19 @@ export async function adminUpsertContent(
     return { data: null, error: GENERIC_SAVE_ERROR };
   }
 
+  // Sanea TODOS los strings del contenido (recorta caracteres de control) y
+  // aplica el saneamiento estricto de texto enriquecido en los campos
+  // listados en RICH_FIELD_PATHS — rechaza el guardado si detecta una firma
+  // de ataque en vez de limpiarla en silencio.
+  const sanitized = sanitizeContentPayload(key, plain);
+  if (sanitized.error) {
+    logWarn("adminUpsertContent", `Contenido rechazado en "${key}"`);
+    return { data: null, error: sanitized.error };
+  }
+
   const { error } = await g.client
     .from("site_content")
-    .upsert({ key, value: plain }, { onConflict: "key" });
+    .upsert({ key, value: sanitized.value }, { onConflict: "key" });
   if (error) {
     logError(`adminUpsertContent(${key})`, error.message);
     return { data: null, error: GENERIC_SAVE_ERROR };
@@ -270,6 +300,29 @@ function assertTable(table: string): string | null {
 export interface ListOptions {
   eq?: [string, string];
   order?: { column: string; ascending: boolean };
+}
+
+/**
+ * Extrae el nombre de columna de un error de "columna inexistente" — puede
+ * venir de dos capas distintas y NO comparten código de error:
+ * - Postgres nativo (código `42703`): `column "x" of relation "y" does not exist`.
+ * - PostgREST, que valida contra su caché de esquema ANTES de tocar
+ *   Postgres (código `PGRST204`, a veces sin `code` en absoluto):
+ *   `Could not find the 'x' column of 'y' in the schema cache`.
+ * Por eso se detecta por PATRÓN DEL MENSAJE, no por código: el nombre
+ * extraído solo se usa si además coincide con una clave real del payload
+ * que se está por enviar (`writeWithMigrationFallback`), así que un texto
+ * de error no relacionado no puede gatillar un strip incorrecto.
+ */
+function extractMissingColumn(message: string | undefined): string | null {
+  const msg = message ?? "";
+  // Postgres nativo: column "x" of relation "y" does not exist
+  const postgres = /column ['"]([a-zA-Z0-9_]+)['"]/i.exec(msg);
+  if (postgres) return postgres[1];
+  // PostgREST: Could not find the 'x' column of 'y' in the schema cache
+  // (el nombre de columna va ANTES de la palabra "column", orden inverso)
+  const postgrest = /['"]([a-zA-Z0-9_]+)['"] column/i.exec(msg);
+  return postgrest ? postgrest[1] : null;
 }
 
 /**
@@ -295,20 +348,40 @@ async function seedDefaultsIfNeeded(
   // Cada rama inserta con su propia forma de fila para que TypeScript pueda
   // acoplar el literal de `table` con el tipo de `rows` (una `rows` unión
   // de las tres formas no puede tipar bien un solo `.insert()` genérico).
-  const insertError = await (table === "gifts"
-    ? client
-        .from(table)
-        .insert(defaultGifts.map(({ id: _id, created_at: _c, ...rest }) => rest))
-        .then((r) => r.error)
-    : table === "services"
-      ? client
-          .from(table)
-          .insert(defaultServices.map(({ id: _id, ...rest }) => rest))
-          .then((r) => r.error)
-      : client
-          .from(table)
-          .insert(defaultFaqs.map(({ id: _id, ...rest }) => rest))
-          .then((r) => r.error));
+  const rows: Record<string, unknown>[] =
+    table === "gifts"
+      ? defaultGifts.map(({ id: _id, created_at: _c, ...rest }) => rest)
+      : table === "services"
+        ? defaultServices.map(({ id: _id, ...rest }) => rest)
+        : defaultFaqs.map(({ id: _id, ...rest }) => rest);
+
+  // Igual que en adminInsert/adminUpdate: si `description_align`/
+  // `answer_align` todavía no existen (falta correr la migración "Desde v5
+  // → v6"), se reintenta sembrando sin esa columna en vez de dejar la tabla
+  // vacía para siempre.
+  let attemptRows = rows;
+  let insertError: { message: string; code?: string } | null = null;
+  for (let i = 0; i < 5; i++) {
+    const { error } = await client.from(table).insert(attemptRows);
+    if (!error) {
+      insertError = null;
+      break;
+    }
+    const missing = extractMissingColumn(error.message);
+    if (missing && attemptRows.every((r) => missing in r)) {
+      logWarn(
+        `seed(${table})`,
+        `Columna "${missing}" no existe todavía — falta ejecutar una migración de supabase/schema.sql. Se siembra sin ese campo.`,
+      );
+      attemptRows = attemptRows.map((r) => {
+        const { [missing]: _drop, ...rest } = r;
+        return rest;
+      });
+      continue;
+    }
+    insertError = error;
+    break;
+  }
   if (insertError) {
     logError(`seed(${table})`, insertError.message);
     return;
@@ -358,6 +431,50 @@ export async function adminList(
   return { data: (data as Record<string, unknown>[]) ?? [], error: null };
 }
 
+type WriteResult = {
+  data: unknown;
+  error: { message: string; code?: string } | null;
+};
+
+/**
+ * Inserta/actualiza con tolerancia a migraciones todavía no ejecutadas.
+ *
+ * Columnas como `description_align`/`answer_align` (bloque "Desde v5 → v6"
+ * de `supabase/schema.sql`) se agregan al código antes de que la
+ * administradora corra la migración en su proyecto de Supabase. Sin este
+ * reintento, CUALQUIER guardado en esa tabla (no solo el de textos largos)
+ * fallaría por completo con "columna no existe" hasta que se ejecute el SQL
+ * — lo cual rompería el panel para instalaciones que todavía no migraron.
+ * En vez de eso: si Postgres rechaza la escritura porque falta una columna,
+ * se reintenta sin ese campo (se guarda el resto igual; esa columna en
+ * particular vuelve a intentarse en el próximo guardado, una vez migrada la
+ * base). Deja rastro en el log para que quede claro que falta correr SQL.
+ */
+async function writeWithMigrationFallback(
+  run: (payload: Record<string, unknown>) => Promise<WriteResult>,
+  payload: Record<string, unknown>,
+  context: string,
+): Promise<WriteResult> {
+  let attempt = { ...payload };
+  for (let i = 0; i < 5; i++) {
+    const { data, error } = await run(attempt);
+    if (!error) return { data, error: null };
+
+    const missing = extractMissingColumn(error.message);
+    if (missing && missing in attempt) {
+      logWarn(
+        context,
+        `Columna "${missing}" no existe todavía — falta ejecutar una migración de supabase/schema.sql. Se guarda sin ese campo.`,
+      );
+      const { [missing]: _drop, ...rest } = attempt;
+      attempt = rest;
+      continue;
+    }
+    return { data: null, error };
+  }
+  return { data: null, error: { message: "too many columnas faltantes" } };
+}
+
 export async function adminInsert(
   table: string,
   payload: Record<string, unknown>,
@@ -369,12 +486,13 @@ export async function adminInsert(
 
   const clean = sanitizePayload(table, payload);
   if (!clean.payload) return { data: null, error: clean.error };
+  const client = g.client;
 
-  const { data, error } = await g.client
-    .from(table)
-    .insert(clean.payload)
-    .select("*")
-    .single();
+  const { data, error } = await writeWithMigrationFallback(
+    (p) => Promise.resolve(client.from(table).insert(p).select("*").single()),
+    clean.payload,
+    `adminInsert(${table})`,
+  );
   if (error) {
     logError(`adminInsert(${table})`, error.message);
     return { data: null, error: GENERIC_SAVE_ERROR };
@@ -395,13 +513,17 @@ export async function adminUpdate(
 
   const clean = sanitizePayload(table, payload);
   if (!clean.payload) return { data: null, error: clean.error };
+  const client = g.client;
+  const cleanId = cleanText(id, 100);
 
-  const { data, error } = await g.client
-    .from(table)
-    .update(clean.payload)
-    .eq("id", cleanText(id, 100))
-    .select("*")
-    .single();
+  const { data, error } = await writeWithMigrationFallback(
+    (p) =>
+      Promise.resolve(
+        client.from(table).update(p).eq("id", cleanId).select("*").single(),
+      ),
+    clean.payload,
+    `adminUpdate(${table})`,
+  );
   if (error) {
     logError(`adminUpdate(${table})`, error.message);
     return { data: null, error: GENERIC_SAVE_ERROR };

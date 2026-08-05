@@ -6,11 +6,15 @@ export function PageHeader({
   title,
   accent,
   description,
+  children,
 }: {
   eyebrow: string;
   title: string;
   accent?: string;
   description?: string;
+  /** Contenido adicional (ej.: un párrafo de texto enriquecido) en vez de
+   * `description`, en la misma posición visual. */
+  children?: React.ReactNode;
 }) {
   return (
     <header className="relative overflow-hidden pb-16 pt-40 md:pb-20">
@@ -30,6 +34,7 @@ export function PageHeader({
           {description && (
             <p className="prose-fs mt-6 max-w-2xl text-lg">{description}</p>
           )}
+          {children}
         </Reveal>
       </div>
     </header>

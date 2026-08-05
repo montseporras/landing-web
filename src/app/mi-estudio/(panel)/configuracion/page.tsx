@@ -3,19 +3,27 @@
 import {
   AdminCard,
   AdminHeader,
+  CancelButton,
   ErrorNotice,
   Field,
   NotConfigured,
+  RestoreDefaultButton,
   SaveButton,
+  UnsavedNotice,
 } from "@/components/admin/ui";
 import { useSiteContent } from "@/components/admin/use-site-content";
 import { Input, Textarea } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { defaultGeneral, defaultSocial } from "@/lib/content/defaults";
+import {
+  defaultFooterCta,
+  defaultGeneral,
+  defaultSocial,
+} from "@/lib/content/defaults";
 
 export default function AdminConfiguracionPage() {
   const general = useSiteContent("general", defaultGeneral);
   const social = useSiteContent("social", defaultSocial);
+  const footer = useSiteContent("footer", defaultFooterCta);
 
   if (!general.configured) {
     return (
@@ -25,7 +33,7 @@ export default function AdminConfiguracionPage() {
       </>
     );
   }
-  if (general.loading || social.loading) {
+  if (general.loading || social.loading || footer.loading) {
     return (
       <>
         <AdminHeader title="Configuración" />
@@ -35,12 +43,22 @@ export default function AdminConfiguracionPage() {
   }
 
   async function saveAll() {
-    await Promise.all([general.save(), social.save()]);
+    await Promise.all([general.save(), social.save(), footer.save()]);
   }
 
-  const saving = general.saving || social.saving;
-  const saved = general.saved || social.saved;
-  const error = general.error ?? social.error;
+  function cancelAll() {
+    if (isDirty && !confirm("Tenés cambios sin guardar. ¿Descartarlos?")) {
+      return;
+    }
+    general.setValue(general.lastSaved);
+    social.setValue(social.lastSaved);
+    footer.setValue(footer.lastSaved);
+  }
+
+  const isDirty = general.isDirty || social.isDirty || footer.isDirty;
+  const saving = general.saving || social.saving || footer.saving;
+  const saved = general.saved || social.saved || footer.saved;
+  const error = general.error ?? social.error ?? footer.error;
 
   return (
     <form
@@ -179,9 +197,82 @@ export default function AdminConfiguracionPage() {
           </div>
         </AdminCard>
 
+        <AdminCard
+          title="CTA del footer"
+          className="border-gold-200"
+        >
+          <p className="mb-4 text-sm text-muted">
+            El bloque «¿Empezamos?» que aparece en la columna derecha del pie
+            de página, en todas las páginas del sitio.
+          </p>
+          <div className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="Etiqueta superior">
+                <Input
+                  value={footer.value.eyebrow}
+                  onChange={(e) =>
+                    footer.setValue({ ...footer.value, eyebrow: e.target.value })
+                  }
+                />
+              </Field>
+              <Field label="Título">
+                <Input
+                  value={footer.value.title}
+                  onChange={(e) =>
+                    footer.setValue({ ...footer.value, title: e.target.value })
+                  }
+                />
+              </Field>
+            </div>
+            <Field label="Texto">
+              <Textarea
+                value={footer.value.text}
+                onChange={(e) =>
+                  footer.setValue({ ...footer.value, text: e.target.value })
+                }
+              />
+            </Field>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="Botón — texto">
+                <Input
+                  value={footer.value.buttonLabel}
+                  onChange={(e) =>
+                    footer.setValue({
+                      ...footer.value,
+                      buttonLabel: e.target.value,
+                    })
+                  }
+                />
+              </Field>
+              <Field label="Botón — enlace">
+                <Input
+                  value={footer.value.buttonHref}
+                  onChange={(e) =>
+                    footer.setValue({
+                      ...footer.value,
+                      buttonHref: e.target.value,
+                    })
+                  }
+                />
+              </Field>
+            </div>
+          </div>
+        </AdminCard>
+
         <div className="flex flex-col items-end gap-3">
           <ErrorNotice message={error} />
-          <SaveButton saving={saving} saved={saved} />
+          <UnsavedNotice show={isDirty} />
+          <div className="flex gap-3">
+            <RestoreDefaultButton
+              onClick={() => {
+                general.restoreDefault("Marca y footer");
+                social.restoreDefault("Redes sociales");
+                footer.restoreDefault("CTA del footer");
+              }}
+            />
+            <CancelButton onClick={cancelAll} />
+            <SaveButton saving={saving} saved={saved} />
+          </div>
         </div>
       </div>
     </form>

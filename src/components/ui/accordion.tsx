@@ -3,12 +3,15 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { useState } from "react";
+import { RichTextView } from "@/components/ui/rich-text";
+import type { Align } from "@/lib/sanitize-html";
 import { cn } from "@/lib/utils";
 
 export interface AccordionItem {
   id: string;
   question: string;
   answer: string;
+  answerAlign?: Align;
 }
 
 /** Acordeón animado y accesible para las preguntas frecuentes. */
@@ -58,9 +61,11 @@ export function Accordion({
                   transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                   className="overflow-hidden"
                 >
-                  <p className="text-justify-soft pb-6 pr-10 leading-relaxed text-muted">
-                    {item.answer}
-                  </p>
+                  <RichTextView
+                    html={item.answer}
+                    align={item.answerAlign ?? "left"}
+                    className="pb-6 pr-10 leading-relaxed text-muted"
+                  />
                 </motion.div>
               )}
             </AnimatePresence>

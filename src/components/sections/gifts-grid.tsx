@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { GiftAccessAction } from "@/components/sections/gift-access";
 import { Badge } from "@/components/ui/badge";
 import { DynamicIcon } from "@/components/ui/icon";
+import { RichTextView } from "@/components/ui/rich-text";
 import { giftCategoryDisplay } from "@/lib/content/defaults";
 import { cn } from "@/lib/utils";
 import type { Gift } from "@/lib/types";
@@ -68,9 +69,11 @@ function GiftCard({ gift }: { gift: Gift }) {
         <h3 className="font-display text-xl leading-snug text-ink">
           {gift.title}
         </h3>
-        <p className="text-justify-soft mt-2 flex-1 text-sm leading-relaxed text-muted">
-          {gift.description}
-        </p>
+        <RichTextView
+          html={gift.description}
+          align={gift.description_align}
+          className="mt-2 flex-1 text-sm leading-relaxed text-muted"
+        />
         <div className="mt-6">
           <GiftAccessAction gift={gift} />
         </div>

@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import type { GeneralSettings, SocialLinks } from "@/lib/types";
+import type { FooterCta, GeneralSettings, SocialLinks } from "@/lib/types";
 
 const nav = [
   { href: "/sobre-mi", label: "Sobre mí" },
@@ -21,9 +21,11 @@ const nav = [
 export function Footer({
   general,
   social,
+  cta,
 }: {
   general: GeneralSettings;
   social: SocialLinks;
+  cta: FooterCta;
 }) {
   const year = new Date().getFullYear();
 
@@ -90,16 +92,13 @@ export function Footer({
 
         {/* Contacto / CTA */}
         <div>
-          <p className="eyebrow mb-4">¿Empezamos?</p>
-          <p className="font-display text-lg text-ink">
-            Reservá tu llamada de claridad
-          </p>
+          <p className="eyebrow mb-4">{cta.eyebrow}</p>
+          <p className="font-display text-lg text-ink">{cta.title}</p>
           <p className="text-justify-soft mb-5 mt-1 text-sm leading-relaxed text-muted">
-            30 minutos, gratis y sin compromiso, para conocernos y ver cómo
-            puedo acompañarte.
+            {cta.text}
           </p>
-          <Button href="/contacto" variant="lila" size="sm">
-            Reservar llamada
+          <Button href={cta.buttonHref} variant="lila" size="sm">
+            {cta.buttonLabel}
           </Button>
         </div>
       </div>

@@ -3,6 +3,7 @@
 import { ChevronDown, ChevronUp, Pencil, Plus, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { MediaUpload } from "@/components/admin/media-upload";
+import { RichTextEditor } from "@/components/admin/rich-text-editor-lazy";
 import {
   AdminCard,
   ErrorNotice,
@@ -20,6 +21,8 @@ import {
   adminList,
   adminUpdate,
 } from "@/lib/admin/actions";
+import type { Align } from "@/lib/sanitize-html";
+import { LIMITS } from "@/lib/validation";
 
 export type FieldKind =
   | "text"
@@ -29,7 +32,8 @@ export type FieldKind =
   | "toggle"
   | "image"
   | "file"
-  | "lines"; // textarea que se guarda como lista (una línea por ítem)
+  | "lines" // textarea que se guarda como lista (una línea por ítem)
+  | "richtext"; // editor enriquecido (negrita, cursiva, listas, enlaces, alineación)
 
 export interface FieldDef {
   name: string;
@@ -42,6 +46,8 @@ export interface FieldDef {
   /** Formato recomendado para campos image/file (medidas, peso, formatos). */
   spec?: string;
   required?: boolean;
+  /** Solo para kind:"richtext" — nombre de la columna hermana de alineación. */
+  alignField?: string;
 }
 
 interface Row {
@@ -80,6 +86,29 @@ export function EntityManager({
   const [isNew, setIsNew] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Snapshot del formulario al abrirlo: permite detectar cambios sin
+  // guardar y avisar antes de cancelar o cerrar la pestaña.
+  const [dirtySnapshot, setDirtySnapshot] = useState<string | null>(null);
+  const isDirty = editing !== null && JSON.stringify(editing) !== dirtySnapshot;
+
+  useEffect(() => {
+    if (!isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
+
+  function closeEditor() {
+    if (isDirty && !confirm("Tenés cambios sin guardar. ¿Descartarlos?")) {
+      return;
+    }
+    setEditing(null);
+    setError(null);
+    setDirtySnapshot(null);
+  }
 
   const load = useCallback(() => {
     setListError(null);
@@ -123,26 +152,30 @@ export function EntityManager({
     fields.forEach((f) => {
       if (f.defaultValue !== undefined) {
         blank[f.name] = f.defaultValue;
-        return;
+      } else {
+        blank[f.name] =
+          f.kind === "toggle"
+            ? true
+            : f.kind === "number"
+              ? 0
+              : f.kind === "lines"
+                ? []
+                : f.kind === "image" || f.kind === "file"
+                  ? null
+                  : f.kind === "select"
+                    ? (f.options?.[0]?.value ?? "")
+                    : "";
       }
-      blank[f.name] =
-        f.kind === "toggle"
-          ? true
-          : f.kind === "number"
-            ? 0
-            : f.kind === "lines"
-              ? []
-              : f.kind === "image" || f.kind === "file"
-                ? null
-                : f.kind === "select"
-                  ? (f.options?.[0]?.value ?? "")
-                  : "";
+      if (f.kind === "richtext" && f.alignField) {
+        blank[f.alignField] = "left";
+      }
     });
     if (hasActive) blank.active = true;
     if (hasOrder) blank.sort_order = (rows?.length ?? 0) + 1;
     setEditing(blank);
     setIsNew(true);
     setError(null);
+    setDirtySnapshot(JSON.stringify(blank));
   }
 
   async function saveEditing() {
@@ -176,6 +209,7 @@ export function EntityManager({
         : (prev ?? []).map((r) => (r.id === saved.id ? saved : r)),
     );
     setEditing(null);
+    setDirtySnapshot(null);
   }
 
   async function remove(id: string) {
@@ -316,6 +350,24 @@ export function EntityManager({
             }
           />
         );
+      case "richtext": {
+        const alignField = f.alignField;
+        const align = (alignField ? editing[alignField] : "left") as Align;
+        return (
+          <RichTextEditor
+            ariaLabel={f.label}
+            maxLength={LIMITS.richText}
+            value={{ html: (v as string) ?? "", align: align || "left" }}
+            onChange={(next) => {
+              setEditing({
+                ...editing,
+                [f.name]: next.html,
+                ...(alignField ? { [alignField]: next.align } : {}),
+              });
+            }}
+          />
+        );
+      }
     }
   }
 
@@ -330,15 +382,17 @@ export function EntityManager({
             {renderField(f)}
           </Field>
         ))}
+        {isDirty && (
+          <p className="text-xs text-gold-600">
+            Tenés cambios sin guardar.
+          </p>
+        )}
         <ErrorNotice message={error} />
         <div className="flex gap-3">
           <SaveButton type="button" saving={saving} onClick={saveEditing} />
           <button
             type="button"
-            onClick={() => {
-              setEditing(null);
-              setError(null);
-            }}
+            onClick={closeEditor}
             className="h-11 rounded-full border border-sand-300 px-5 text-sm text-muted hover:border-sand-400"
           >
             Cancelar
@@ -425,6 +479,7 @@ export function EntityManager({
                     setEditing(row);
                     setIsNew(false);
                     setError(null);
+                    setDirtySnapshot(JSON.stringify(row));
                     window.scrollTo({ top: 0, behavior: "smooth" });
                   }}
                   aria-label="Editar"

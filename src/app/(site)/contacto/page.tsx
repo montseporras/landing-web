@@ -3,7 +3,7 @@ import { Instagram, Mail, MessageCircle } from "lucide-react";
 import { Reveal } from "@/components/motion/reveal";
 import { ContactForms } from "@/components/sections/contact-forms";
 import { PageHeader } from "@/components/sections/page-header";
-import { getSocial } from "@/lib/content/queries";
+import { getContactPage, getSocial } from "@/lib/content/queries";
 
 export const revalidate = 300;
 
@@ -15,27 +15,28 @@ export const metadata: Metadata = {
 };
 
 export default async function ContactoPage() {
-  const social = await getSocial();
+  const [social, page] = await Promise.all([getSocial(), getContactPage()]);
+  const { header, channelBlurbs, note } = page;
 
   const channels = [
     {
       icon: MessageCircle,
       label: "WhatsApp",
-      description: "La vía más rápida para consultas breves.",
+      description: channelBlurbs.whatsapp,
       href: social.whatsapp,
       cta: "Escribime por WhatsApp",
     },
     {
       icon: Mail,
       label: "Email",
-      description: "Para consultas más largas o propuestas.",
+      description: channelBlurbs.email,
       href: social.email ? `mailto:${social.email}` : "",
       cta: social.email || "Email",
     },
     {
       icon: Instagram,
       label: "Instagram",
-      description: "Contenido diario y mensajes directos.",
+      description: channelBlurbs.instagram,
       href: social.instagram,
       cta: "Seguime en Instagram",
     },
@@ -44,10 +45,10 @@ export default async function ContactoPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Contacto"
-        title="Demos el primer paso,"
-        accent="juntas"
-        description="Reservá tu llamada de claridad gratuita o escribime lo que necesites. Leo y respondo personalmente cada mensaje, en menos de 48 horas."
+        eyebrow={header.eyebrow}
+        title={header.title}
+        accent={header.titleAccent}
+        description={header.description}
       />
 
       <section className="pb-28">
@@ -85,13 +86,8 @@ export default async function ContactoPage() {
 
             <Reveal delay={0.35}>
               <div className="rounded-3xl bg-sand-50 p-6 text-sm leading-relaxed text-muted">
-                <p className="font-display text-lg text-ink">
-                  Un detalle importante
-                </p>
-                <p className="text-justify-soft mt-2">
-                  Tu información es 100% confidencial. Nunca comparto datos y
-                  solo te escribo para responder tu consulta.
-                </p>
+                <p className="font-display text-lg text-ink">{note.title}</p>
+                <p className="text-justify-soft mt-2">{note.text}</p>
               </div>
             </Reveal>
           </div>

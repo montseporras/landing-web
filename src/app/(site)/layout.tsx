@@ -2,7 +2,7 @@ import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
 import { ScrollProgress } from "@/components/layout/scroll-progress";
 import { WhatsAppButton } from "@/components/layout/whatsapp-button";
-import { getGeneral, getSocial } from "@/lib/content/queries";
+import { getFooterCta, getGeneral, getSocial } from "@/lib/content/queries";
 import { jsonLdScript, siteUrl } from "@/lib/utils";
 
 export default async function SiteLayout({
@@ -10,7 +10,11 @@ export default async function SiteLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [general, social] = await Promise.all([getGeneral(), getSocial()]);
+  const [general, social, footerCta] = await Promise.all([
+    getGeneral(),
+    getSocial(),
+    getFooterCta(),
+  ]);
 
   // Datos estructurados (Schema.org) para buscadores
   const jsonLd = {
@@ -63,7 +67,7 @@ export default async function SiteLayout({
       <ScrollProgress />
       <Navbar brandName={general.brandName} />
       <main id="contenido">{children}</main>
-      <Footer general={general} social={social} />
+      <Footer general={general} social={social} cta={footerCta} />
       <WhatsAppButton href={social.whatsapp} />
     </>
   );

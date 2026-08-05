@@ -3,25 +3,30 @@
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { MediaUpload } from "@/components/admin/media-upload";
+import { RichTextEditor } from "@/components/admin/rich-text-editor-lazy";
 import {
   AdminCard,
   AdminHeader,
+  CancelButton,
   ErrorNotice,
   Field,
   NotConfigured,
+  RestoreDefaultButton,
   SaveButton,
+  UnsavedNotice,
 } from "@/components/admin/ui";
 import { useSiteContent } from "@/components/admin/use-site-content";
 import { Input, Textarea } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { defaultAbout } from "@/lib/content/defaults";
+import { defaultAbout, defaultAboutSections } from "@/lib/content/defaults";
 import { IMAGE_SPECS } from "@/lib/media";
+import { LIMITS } from "@/lib/validation";
 
 export default function AdminSobreMiPage() {
-  const { value, setValue, save, loading, saving, saved, error, configured } =
-    useSiteContent("about", defaultAbout);
+  const about = useSiteContent("about", defaultAbout);
+  const sections = useSiteContent("about_sections", defaultAboutSections);
 
-  if (!configured) {
+  if (!about.configured) {
     return (
       <>
         <AdminHeader title="Sobre mí" />
@@ -29,7 +34,7 @@ export default function AdminSobreMiPage() {
       </>
     );
   }
-  if (loading) {
+  if (about.loading || sections.loading) {
     return (
       <>
         <AdminHeader title="Sobre mí" />
@@ -38,7 +43,24 @@ export default function AdminSobreMiPage() {
     );
   }
 
+  const { value, setValue } = about;
   const gallery = value.gallery ?? [];
+  const isDirty = about.isDirty || sections.isDirty;
+  const saving = about.saving || sections.saving;
+  const saved = about.saved && sections.saved;
+  const error = about.error ?? sections.error;
+
+  async function saveAll() {
+    await Promise.all([about.save(), sections.save()]);
+  }
+
+  function cancelAll() {
+    if (isDirty && !confirm("Tenés cambios sin guardar. ¿Descartarlos?")) {
+      return;
+    }
+    about.setValue(about.lastSaved);
+    sections.setValue(sections.lastSaved);
+  }
 
   function moveGalleryImage(index: number, dir: -1 | 1) {
     const target = index + dir;
@@ -52,7 +74,7 @@ export default function AdminSobreMiPage() {
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        save();
+        saveAll();
       }}
     >
       <AdminHeader
@@ -88,24 +110,38 @@ export default function AdminSobreMiPage() {
               label="Biografía corta"
               hint="Se muestra en el inicio y arriba de la página Sobre mí."
             >
-              <Textarea
+              <RichTextEditor
+                ariaLabel="Biografía corta"
+                maxLength={LIMITS.richText}
                 value={value.bio}
-                onChange={(e) => setValue({ ...value, bio: e.target.value })}
+                onChange={(bio) => setValue({ ...value, bio })}
               />
             </Field>
-            <Field label="Mi historia" hint="Podés separar párrafos con Enter.">
-              <Textarea
-                className="min-h-40"
+            <Field label="Título de «Mi historia»">
+              <Input
+                value={sections.value.storyHeading}
+                onChange={(e) =>
+                  sections.setValue({
+                    ...sections.value,
+                    storyHeading: e.target.value,
+                  })
+                }
+              />
+            </Field>
+            <Field label="Mi historia" hint="Podés usar párrafos, negrita, cursiva y listas.">
+              <RichTextEditor
+                ariaLabel="Mi historia"
+                maxLength={LIMITS.richText}
                 value={value.story}
-                onChange={(e) => setValue({ ...value, story: e.target.value })}
+                onChange={(story) => setValue({ ...value, story })}
               />
             </Field>
             <Field label="Misión">
-              <Textarea
+              <RichTextEditor
+                ariaLabel="Misión"
+                maxLength={LIMITS.richText}
                 value={value.mission}
-                onChange={(e) =>
-                  setValue({ ...value, mission: e.target.value })
-                }
+                onChange={(mission) => setValue({ ...value, mission })}
               />
             </Field>
             <Field
@@ -132,10 +168,40 @@ export default function AdminSobreMiPage() {
         </AdminCard>
 
         <AdminCard title="Galería de imágenes">
+          <div className="mb-4 grid gap-4 md:grid-cols-2">
+            <Field label="Etiqueta superior de la galería">
+              <Input
+                value={sections.value.galleryHeader.eyebrow}
+                onChange={(e) =>
+                  sections.setValue({
+                    ...sections.value,
+                    galleryHeader: {
+                      ...sections.value.galleryHeader,
+                      eyebrow: e.target.value,
+                    },
+                  })
+                }
+              />
+            </Field>
+            <Field label="Título de la galería">
+              <Input
+                value={sections.value.galleryHeader.title}
+                onChange={(e) =>
+                  sections.setValue({
+                    ...sections.value,
+                    galleryHeader: {
+                      ...sections.value.galleryHeader,
+                      title: e.target.value,
+                    },
+                  })
+                }
+              />
+            </Field>
+          </div>
           <p className="mb-4 text-sm text-muted">
-            Estas fotos aparecen en la sección «Detrás de escena» de la página
-            Sobre mí. Podés subir varias a la vez, reordenarlas con las flechas
-            y quitar las que quieras.
+            Estas fotos aparecen en la sección de la página Sobre mí. Podés
+            subir varias a la vez, reordenarlas con las flechas y quitar las
+            que quieras.
           </p>
           {gallery.length > 0 && (
             <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -279,6 +345,50 @@ export default function AdminSobreMiPage() {
         </AdminCard>
 
         <AdminCard title="Valores">
+          <div className="mb-4 grid gap-4 md:grid-cols-3">
+            <Field label="Etiqueta superior">
+              <Input
+                value={sections.value.valuesHeader.eyebrow}
+                onChange={(e) =>
+                  sections.setValue({
+                    ...sections.value,
+                    valuesHeader: {
+                      ...sections.value.valuesHeader,
+                      eyebrow: e.target.value,
+                    },
+                  })
+                }
+              />
+            </Field>
+            <Field label="Título">
+              <Input
+                value={sections.value.valuesHeader.title}
+                onChange={(e) =>
+                  sections.setValue({
+                    ...sections.value,
+                    valuesHeader: {
+                      ...sections.value.valuesHeader,
+                      title: e.target.value,
+                    },
+                  })
+                }
+              />
+            </Field>
+            <Field label="Parte destacada">
+              <Input
+                value={sections.value.valuesHeader.titleAccent}
+                onChange={(e) =>
+                  sections.setValue({
+                    ...sections.value,
+                    valuesHeader: {
+                      ...sections.value.valuesHeader,
+                      titleAccent: e.target.value,
+                    },
+                  })
+                }
+              />
+            </Field>
+          </div>
           <div className="space-y-4">
             {value.values.map((v, i) => (
               <div key={i} className="rounded-2xl border border-sand-200 p-4">
@@ -336,7 +446,17 @@ export default function AdminSobreMiPage() {
 
         <div className="flex flex-col items-end gap-3">
           <ErrorNotice message={error} />
-          <SaveButton saving={saving} saved={saved} />
+          <UnsavedNotice show={isDirty} />
+          <div className="flex gap-3">
+            <RestoreDefaultButton
+              onClick={() => {
+                about.restoreDefault("Sobre mí");
+                sections.restoreDefault("Sobre mí");
+              }}
+            />
+            <CancelButton onClick={cancelAll} />
+            <SaveButton saving={saving} saved={saved} />
+          </div>
         </div>
       </div>
     </form>

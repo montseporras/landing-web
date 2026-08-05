@@ -21,6 +21,8 @@ gestionar **todo el contenido sin conocimientos técnicos**.
 | Estilos         | Tailwind CSS · tipografías Cormorant Garamond + Inter (`next/font`)            |
 | Animaciones     | Framer Motion (scroll reveal, contadores, parallax, microinteracciones)        |
 | Iconos          | Lucide React                                                                   |
+| Editor de texto enriquecido | TipTap (solo en el panel, cargado con `next/dynamic`/`ssr:false` — nunca en el bundle público) |
+| Saneamiento de HTML | `sanitize-html` (allowlist estricta, saneado al guardar y de nuevo al renderizar) |
 | Backend         | Supabase — Postgres y Storage (datos y archivos)                               |
 | Acceso al panel | Login propio con usuario + contraseña (cookie firmada HMAC, sin Supabase Auth) |
 | Hosting         | Vercel (recomendado)                                                           |
@@ -69,13 +71,14 @@ sin conocimientos técnicos — solo lo esencial:
 
 | Sección              | Qué permite                                                                                                                                                                                                                                                                                   |
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Página de inicio     | Títulos, subtítulos, botones/CTAs, fotografía, insignias                                                                                                                                                                                                                                      |
-| Sobre mí             | Foto principal, galería, biografía, historia, misión, valores y **estadísticas** (personas acompañadas, años, horas, % que recomiendan)                                                                                                                                                       |
-| Servicios            | **CRUD completo**: crear/editar/eliminar/ordenar/activar servicios, con «qué incluye», precio opcional, ícono o imagen, y destacado — todo sin tocar código                                                                                                                                    |
-| Regalos              | Crear/editar/eliminar/ordenar recursos (incluidos los de fábrica); portada, descripción, **tipo libre** (Ebook, Guía, Curso…), **modo de acceso** (descarga directa / pedir email / enlace externo) y **destacar en la portada** (eBook principal). El regalo destacado tiene, solo en el inicio, un tratamiento visual animado (flotación suave, halos, marco dorado); la grilla de `/regalos` se mantiene simple a propósito (`src/components/sections/gifts-grid.tsx`) |
-| Preguntas frecuentes | CRUD completo con orden de aparición, incluidas las preguntas que vienen de fábrica                                                                                                                                                                                                           |
+| Página de inicio     | Títulos, subtítulos, botones/CTAs, fotografía, insignias, y el encabezado (eyebrow/título/bajada) de Beneficios, Camino paso a paso, Servicios, Regalos, FAQ y el CTA final |
+| Sobre mí             | Foto principal, galería, **biografía/historia/misión en texto enriquecido**, valores, **estadísticas** (personas acompañadas, años, horas, % que recomiendan) y los encabezados de «Mi historia», «Mis valores» y «Detrás de escena» |
+| Servicios            | Encabezado de la página + **CRUD completo**: crear/editar/eliminar/ordenar/activar servicios, con descripción en **texto enriquecido**, «qué incluye», precio opcional, ícono o imagen, y destacado — todo sin tocar código                                                                    |
+| Regalos              | Encabezado de la página + crear/editar/eliminar/ordenar recursos (incluidos los de fábrica); portada, descripción en **texto enriquecido**, **tipo libre** (Ebook, Guía, Curso…), **modo de acceso** (descarga directa / pedir email / enlace externo) y **destacar en la portada** (eBook principal). El regalo destacado tiene, solo en el inicio, un tratamiento visual animado (flotación suave, halos, marco dorado); la grilla de `/regalos` se mantiene simple a propósito (`src/components/sections/gifts-grid.tsx`) |
+| Preguntas frecuentes | Encabezado de la página + CRUD completo con respuesta en **texto enriquecido** y orden de aparición, incluidas las preguntas que vienen de fábrica                                                                                                                                           |
+| Contacto             | Encabezado de la página, la frase breve de cada canal (WhatsApp/Email/Instagram) y la nota de confidencialidad                                                                                                                                                                               |
 | Formularios          | **Bandeja** e **historial permanente**: ver nombre, email, teléfono, mensaje, fecha y detalle amigable (p. ej. «Regalo descargado: …»); marcar leído, responder por email, **quitar de la bandeja con contraseña** (nunca se borra de verdad) y **exportar el historial a Excel**              |
-| Ajustes              | Marca, redes sociales (Instagram, WhatsApp, email…) y footer                                                                                                                                                                                                                                  |
+| Ajustes              | Marca, redes sociales (Instagram, WhatsApp, email…), footer y el bloque de CTA del footer                                                                                                                                                                                                     |
 
 ## 🚀 Instalación paso a paso
 
@@ -102,11 +105,17 @@ npm run dev            # → http://localhost:3000
    `ADMIN_USERNAME` y `ADMIN_PASSWORD` del mismo archivo. No hace falta crear
    ningún usuario en Supabase.
 
-> **¿Ya tenías la base creada en una versión anterior (v4)?** No repitas el
-> `schema.sql` completo: al final de ese archivo hay un bloque comentado
-> **«Desde v4 → v5»**. Copiá y ejecutá SOLO ese bloque en el SQL Editor para
-> agregar lo nuevo (regalo destacado, historial de formularios, tabla de
-> servicios) sin perder tus datos.
+> **¿Ya tenías la base creada en una versión anterior?** No repitas el
+> `schema.sql` completo: al final de ese archivo hay bloques comentados por
+> versión — **«Desde v4 → v5»** (regalo destacado, historial de formularios,
+> tabla de servicios) y **«Desde v5 → v6»** (columnas de alineación del
+> texto enriquecido en Servicios/Regalos/FAQ). Copiá y ejecutá SOLO el o los
+> bloques que te falten en el SQL Editor, en orden, sin perder tus datos. El
+> texto enriquecido de «Sobre mí» (biografía/historia/misión) y los nuevos
+> encabezados de página **no** necesitan ALTER TABLE: se guardan en
+> `site_content`, que ya acepta cualquier clave nueva sin cambios de
+> esquema — hasta que no edites esa sección desde el panel, el sitio sigue
+> mostrando el contenido de fábrica.
 
 ### Variables de entorno
 
@@ -217,6 +226,48 @@ reordená con las flechas.
 Importante: «quitar de la bandeja» **no elimina** el registro; solo lo saca de
 la vista diaria. Todo queda guardado para siempre en el historial.
 
+## ✍️ Texto enriquecido (negrita, cursiva, listas, enlaces, alineación)
+
+El panel tiene dos tipos de campo de texto:
+
+- **Texto simple** — títulos, subtítulos cortos, etiquetas, botones,
+  nombres, precios. No admiten formato: lo que escribís es lo que se ve, sin
+  negrita ni listas. Son la mayoría de los campos del panel.
+- **Texto enriquecido** — un editor con una barra de herramientas propia,
+  usado solo en los campos de párrafos largos/editoriales:
+  - «Sobre mí» → Biografía corta, Mi historia, Misión.
+  - Servicios → Descripción de cada servicio.
+  - Regalos → Descripción de cada regalo.
+  - Preguntas frecuentes → Respuesta de cada pregunta.
+
+El editor permite **negrita, cursiva, listas con viñetas, listas numeradas,
+enlaces** (http, https o `mailto:`; se rechazan enlaces con protocolos
+inseguros como `javascript:`) y **4 alineaciones** (izquierda, centro,
+derecha, justificado — aplicada a todo el campo, no párrafo por párrafo).
+También tiene deshacer/rehacer, un botón para limpiar el formato, un
+contador de caracteres y un botón de vista previa. **No** permite tamaños de
+letra, colores, tipografías, imágenes ni HTML pegado a mano: eso es
+intencional, para que la identidad visual del sitio no se rompa.
+
+Los cambios en el editor **no se guardan solos**: hay que tocar «Guardar
+cambios», igual que en el resto del panel. Si intentás salir de una sección
+con cambios sin guardar, el panel te avisa y pide confirmación.
+
+**Restaurar contenido predeterminado** — todas las pantallas de contenido
+por secciones (Inicio, Sobre mí, Servicios, Regalos, FAQ, Contacto, Ajustes)
+tienen un botón «Restaurar predeterminado» que reemplaza esa sección por el
+contenido de fábrica. Pide confirmación y **no se guarda solo**: seguís
+teniendo que tocar «Guardar cambios» para confirmarlo, así que podés
+arrepentirte antes de perder tu versión.
+
+**Por qué esos campos y no otros** — los campos cortos (títulos, botones,
+subtítulos del hero, textos del footer) se dejaron **a propósito** como
+texto simple: son frases de una línea pensadas para un lugar exacto del
+diseño, y permitir negrita/listas ahí no aporta valor editorial y sí el
+riesgo de romper el layout (una lista con viñetas no entra en un botón). Si
+en el futuro hace falta enriquecer alguno de esos campos, el mismo mecanismo
+ya está armado — es una decisión de alcance, no una limitación técnica.
+
 ## 📁 Estructura de carpetas
 
 ```
@@ -236,16 +287,21 @@ src/
 │   ├── sitemap.ts  robots.ts  icon.svg
 ├── components/
 │   ├── sections/          # Secciones del sitio (hero, regalos, timeline…)
-│   ├── admin/             # Piezas del CMS (EntityManager, MediaUpload…)
+│   ├── admin/             # Piezas del CMS (EntityManager, RichTextEditor…)
+│   │   ├── rich-text-editor.tsx       # Editor TipTap (negrita/listas/enlaces/alineación)
+│   │   ├── rich-text-editor-lazy.tsx  # next/dynamic ssr:false — único punto de import
+│   │   └── content-editors.tsx        # Editores reutilizables de encabezados de sección/página
 │   ├── layout/            # Navbar, footer, WhatsApp, scroll progress
 │   ├── motion/            # Reveal, Stagger, Counter, Parallax
 │   └── ui/                # Primitivas (Button, Input, Accordion…)
+│       └── rich-text.tsx  # Único componente que renderiza HTML enriquecido (dangerouslySetInnerHTML saneado)
 ├── lib/
 │   ├── content/           # defaults.ts (fallback) + queries.ts (Supabase)
 │   ├── supabase/          # Clientes (público, server, service-role) + config.ts
 │   ├── admin/             # session.ts (cookie firmada) + actions.ts + tables.ts (allowlist)
 │   ├── actions.ts         # Server Actions de formularios (con validación + rate limit)
 │   ├── validation.ts      # Sanitización y validación de entradas
+│   ├── sanitize-html.ts   # Saneamiento de texto enriquecido (guardado y render, allowlists separadas)
 │   ├── media.ts           # Reglas de archivos subidos (tipos, tamaños, specs)
 │   ├── rate-limit.ts      # Rate limiting en memoria (login y formularios)
 │   ├── export-excel.ts    # Exportación del historial a Excel (sin librerías)
@@ -253,6 +309,8 @@ src/
 │   ├── types.ts  utils.ts
 └── middleware.ts          # Protección del panel (ruta secreta)
 components/ui/honeypot.tsx  # Campo trampa anti-bots de los formularios
+scripts/
+└── test-sanitize-html.ts  # Pruebas de XSS del saneador (`npx tsx scripts/test-sanitize-html.ts`)
 supabase/
 ├── schema.sql             # Tablas + RLS + Storage (ejecutar primero)
 └── seed.sql               # Contenido inicial (opcional)
@@ -264,13 +322,38 @@ Todos los datos viven en **Supabase (PostgreSQL)**, en estas tablas:
 
 | Tabla          | Qué guarda                                                                       |
 | -------------- | -------------------------------------------------------------------------------- |
-| `site_content` | Contenido por secciones en JSON (inicio, sobre mí, ajustes, beneficios, pasos)   |
-| `services`     | Servicios (gestionables desde el panel)                                          |
-| `gifts`        | Regalos / recursos descargables                                                  |
-| `faqs`         | Preguntas frecuentes                                                             |
+| `site_content` | Contenido por página/sección en JSON: una fila por clave (`hero`, `about`, `home_sections`, `services_page`, `gifts_page`, `faq_page`, `contact_page`, `footer`, `general`, `social`, `seo`, `benefits`, `how_it_works`…) |
+| `services`     | Servicios (gestionables desde el panel) — `description` es HTML saneado (texto enriquecido) + `description_align` |
+| `gifts`        | Regalos / recursos descargables — `description` es HTML saneado (texto enriquecido) + `description_align` |
+| `faqs`         | Preguntas frecuentes — `answer` es HTML saneado (texto enriquecido) + `answer_align` |
 | `submissions`  | **Historial permanente** de formularios (contacto, llamadas, descargas)          |
 
 Los archivos e imágenes se guardan en **Supabase Storage** (bucket `media`).
+
+### Arquitectura del contenido: por qué JSON por sección + tablas normalizadas
+
+El modelo es **híbrido, a propósito**, no un motor de bloques genérico:
+
+- **`site_content`** (JSON por clave) para contenido de página/sección: el
+  nombre de la clave ya funciona como identificador de página+sección
+  (`home_sections`, `about_sections`, `services_page`…), así que agregar una
+  página o sección nueva en el futuro es agregar una clave nueva + una
+  pantalla en el panel — no rediseñar la base ni el panel entero.
+- **Tablas normalizadas** (`services`, `gifts`, `faqs`) para colecciones
+  repetibles que necesitan orden y activar/desactivar por ítem — ya tenían
+  `sort_order`/`active`, no se tocó esa parte.
+- Se descartó una tabla genérica de «bloques» (`page_id`/`section_id`/
+  `block_id`/`campo`/`valor`): para este sitio (un solo tenant, un puñado de
+  páginas fijas) hubiera significado reconstruir toda la capa de datos y el
+  panel sin necesidad real.
+
+Los campos de **texto enriquecido** se guardan como HTML ya saneado (nunca
+HTML sin filtrar): en `site_content` como `{ html, align }`
+(`about.bio`/`story`/`mission`); en las tablas normalizadas, la columna de
+texto de siempre (`description`, `answer`) más una columna hermana de
+alineación (`description_align`, `answer_align`). Ver
+[✍️ Texto enriquecido](#️-texto-enriquecido-negrita-cursiva-listas-enlaces-alineación)
+más arriba y la sección [🔒 Seguridad](#-seguridad) más abajo.
 
 **Datos de las personas** (quien pide un regalo o deja contacto): se guardan en
 `submissions`. Esta tabla **es** el historial permanente — desde el panel nunca
@@ -358,12 +441,65 @@ protege, cómo y dónde está en el código.
   vectores de inyección).
 - **URLs seguras**: solo se aceptan `http(s)` o rutas internas; se rechazan
   esquemas peligrosos como `javascript:` (`isSafeUrl`).
-- **Protección XSS**: React escapa todo el contenido por defecto. El único
-  punto con HTML crudo es el JSON-LD de SEO, que se serializa escapando
-  `< > &` para que ningún contenido editable pueda romper la etiqueta
-  `<script>` (`jsonLdScript` en `src/lib/utils.ts`).
+- **Protección XSS**: React escapa todo el contenido por defecto. Los únicos
+  dos puntos del proyecto con HTML crudo son (a) el JSON-LD de SEO, que se
+  serializa escapando `< > &` (`jsonLdScript` en `src/lib/utils.ts`), y (b)
+  el componente centralizado de texto enriquecido — ver punto siguiente.
 
-### 4. Formularios públicos
+### 4. Texto enriquecido (negrita, cursiva, listas, enlaces, alineación)
+
+El contenido enriquecido del panel (biografía/historia/misión de «Sobre
+mí», descripción de Servicios y Regalos, respuesta de FAQ) se trata como
+**entrada no confiable**, con defensa en profundidad en capas
+independientes:
+
+- **Al guardar**: `sanitizeRichTextHtml` (`src/lib/sanitize-html.ts`) aplica
+  una allowlist estricta con la librería `sanitize-html` —
+  **`p, br, strong, b, em, i, ul, ol, li, a`** son las únicas etiquetas
+  permitidas; `a` solo admite `href` (se recalculan `target`/`rel`, nunca
+  vienen del cliente). Esquemas de enlace permitidos: `http`, `https`,
+  `mailto` — **se rechazan `javascript:`, `data:`, `vbscript:` y cualquier
+  otro esquema**. `style`, `class`, `id`, atributos `on*` (eventos),
+  `<script>`, `<iframe>`, `<object>`, `<embed>` y `<form>` **no están en la
+  allowlist**: sea lo que sea que tenga cualquiera de eso en el HTML crudo,
+  el guardado se **rechaza por completo** (no se limpia en silencio) con un
+  mensaje amigable — ver `containsDangerousMarkup`. Esto aplica tanto a los
+  campos de las tablas (`services`, `gifts`, `faqs`, vía
+  `sanitizePayload`/`src/lib/admin/tables.ts`) como a `about.bio/story/
+  mission` dentro de `site_content` (vía `RICH_FIELD_PATHS` en
+  `adminUpsertContent`, `src/lib/admin/actions.ts`) — **todos** los strings
+  de `site_content`, enriquecidos o no, pasan además por una limpieza de
+  caracteres de control antes de guardarse.
+- **Al renderizar**: `sanitizeRichTextForRender` (misma allowlist, pero
+  **definida por separado**, no importada de la de guardado) vuelve a
+  sanear el HTML antes de mostrarlo, dentro de un único componente
+  centralizado: `src/components/ui/rich-text.tsx` (`<RichTextView>`). Es la
+  **única** pieza de todo el proyecto que usa `dangerouslySetInnerHTML` con
+  contenido guardado por la administradora. Que ambas capas usen
+  allowlists definidas independientemente (no la misma función llamada dos
+  veces) significa que un error en el allowlist de guardado no desactiva
+  también la de render.
+- **Tripwire en la base de datos**: además de las dos capas de la
+  aplicación, el bloque de migración «Desde v5 → v6» (`supabase/
+  schema.sql`) agrega una restricción `CHECK` sobre `services.description`,
+  `gifts.description` y `faqs.answer` que rechaza patrones evidentes
+  (`<script`, `<iframe`, `on\w+\s*=`, `javascript:`…) a nivel de Postgres.
+  No sustituye el saneamiento de la aplicación (un filtro por expresión
+  regular nunca es, por sí solo, suficiente contra XSS) — es una red
+  adicional gratuita ante un futuro bug de la app o una edición manual por
+  SQL.
+- **El editor** (TipTap, `src/components/admin/rich-text-editor.tsx`) se
+  carga solo dentro del panel, vía `next/dynamic` con `ssr: false`
+  (`rich-text-editor-lazy.tsx`) — nunca se referencia desde `src/app/(site)`
+  ni desde `src/components/sections`, así que no entra en el bundle que
+  reciben las visitantes del sitio.
+- **Pruebas**: `scripts/test-sanitize-html.ts` (`npx tsx scripts/
+  test-sanitize-html.ts`) prueba `<script>`, `javascript:`, atributos
+  `onerror`/`onclick`, `<iframe>`, HTML malformado, enlaces `data:`/
+  `vbscript:` y HTML enviado directo a la función de saneamiento (sin pasar
+  por el editor, simulando un payload manipulado desde el navegador).
+
+### 5. Formularios públicos
 
 - **Honeypot anti-bots**: un campo oculto (`website`) en cada formulario; si un
   bot lo completa, el envío se descarta en silencio.
@@ -373,7 +509,7 @@ protege, cómo y dónde está en el código.
 - Validación de todos los campos antes de guardar; **mensajes de error siempre
   amigables**.
 
-### 5. Subida de archivos
+### 6. Subida de archivos
 
 - **Allowlist de extensiones** (`src/lib/media.ts`): se aceptan imágenes,
   PDF, audio, video, ZIP y Office. Se **excluyen los SVG** a propósito, porque
@@ -382,7 +518,7 @@ protege, cómo y dónde está en el código.
 - Validación **en el navegador y de nuevo en el servidor** (extensión, tamaño y
   que el archivo no esté vacío).
 
-### 6. Cabeceras de seguridad (equivalente gratuito a Helmet)
+### 7. Cabeceras de seguridad (equivalente gratuito a Helmet)
 
 Aplicadas a todas las respuestas desde `next.config.mjs`:
 
@@ -397,7 +533,7 @@ Aplicadas a todas las respuestas desde `next.config.mjs`:
 | `X-XSS-Protection`                | Protección XSS legada para navegadores antiguos                                                                                                                                                                                                      |
 | `poweredByHeader: false`          | No revela que el back está hecho con Next.js                                                                                                                                                                                                         |
 
-### 7. Manejo de errores y secretos
+### 8. Manejo de errores y secretos
 
 - **Nunca se exponen errores internos** (stack traces, mensajes de Supabase) al
   usuario: se registran en el log del servidor (`src/lib/log.ts`) y al navegador

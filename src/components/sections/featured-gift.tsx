@@ -5,6 +5,7 @@ import { BookOpen, Sparkles } from "lucide-react";
 import Image from "next/image";
 import { GiftAccessAction } from "@/components/sections/gift-access";
 import { Reveal } from "@/components/motion/reveal";
+import { RichTextView } from "@/components/ui/rich-text";
 import { giftCategoryDisplay } from "@/lib/content/defaults";
 import type { Gift } from "@/lib/types";
 
@@ -100,7 +101,11 @@ export function FeaturedGift({ gift }: { gift: Gift }) {
               <h2 className="text-display-md text-balance text-ink">
                 {gift.title}
               </h2>
-              <p className="prose-fs mt-5">{gift.description}</p>
+              <RichTextView
+                html={gift.description}
+                align={gift.description_align}
+                className="mt-5 text-[1.0625rem] leading-relaxed text-muted"
+              />
               <div className="mt-8 max-w-sm">
                 <GiftAccessAction gift={gift} />
               </div>

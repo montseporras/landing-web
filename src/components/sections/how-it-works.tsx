@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Reveal } from "@/components/motion/reveal";
+import type { SectionHeader } from "@/lib/types";
 
 interface Step {
   step: string;
@@ -18,20 +19,25 @@ interface Step {
  *   vive SIEMPRE en la columna central, por lo que el texto nunca puede
  *   quedar debajo de él, en ningún ancho de pantalla.
  */
-export function HowItWorks({ steps }: { steps: Step[] }) {
+export function HowItWorks({
+  steps,
+  header,
+}: {
+  steps: Step[];
+  header: SectionHeader;
+}) {
   return (
     <section className="py-20 md:py-28 lg:py-32">
       <div className="container-content">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <p className="eyebrow mb-4">Cómo trabajamos</p>
+          <p className="eyebrow mb-4">{header.eyebrow}</p>
           <h2 className="text-display-lg text-balance text-ink">
-            Camino Claro,{" "}
-            <em className="font-light italic text-gold-600">Paso a Paso</em>
+            {header.title}{" "}
+            <em className="font-light italic text-gold-600">
+              {header.titleAccent}
+            </em>
           </h2>
-          <p className="prose-fs mt-5">
-            Un proceso simple y transparente, diseñado para que sepas
-            exactamente qué esperar en cada etapa.
-          </p>
+          <p className="prose-fs mt-5">{header.subtitle}</p>
         </Reveal>
 
         <div className="relative mx-auto mt-14 max-w-4xl md:mt-20">

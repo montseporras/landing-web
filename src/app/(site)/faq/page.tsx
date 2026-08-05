@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import { FaqSection } from "@/components/sections/faq-section";
 import { FinalCta } from "@/components/sections/final-cta";
 import { PageHeader } from "@/components/sections/page-header";
-import { getFaqs } from "@/lib/content/queries";
+import {
+  getFaqPage,
+  getFaqs,
+  getHomeSections,
+} from "@/lib/content/queries";
 import { jsonLdScript, siteUrl } from "@/lib/utils";
 
 export const revalidate = 300;
@@ -14,8 +18,18 @@ export const metadata: Metadata = {
   alternates: { canonical: "/faq" },
 };
 
+/** El JSON-LD requiere texto plano: se despoja el HTML del texto enriquecido. */
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
 export default async function FaqPage() {
-  const faqs = await getFaqs();
+  const [faqs, page, homeSections] = await Promise.all([
+    getFaqs(),
+    getFaqPage(),
+    getHomeSections(),
+  ]);
+  const { header } = page;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -23,7 +37,7 @@ export default async function FaqPage() {
     mainEntity: faqs.map((f) => ({
       "@type": "Question",
       name: f.question,
-      acceptedAnswer: { "@type": "Answer", text: f.answer },
+      acceptedAnswer: { "@type": "Answer", text: stripHtml(f.answer) },
     })),
     url: `${siteUrl()}/faq`,
   };
@@ -35,13 +49,13 @@ export default async function FaqPage() {
         dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }}
       />
       <PageHeader
-        eyebrow="FAQ"
-        title="Preguntas"
-        accent="frecuentes"
-        description="Todo lo que necesitás saber antes de empezar tu proceso. Si algo no está acá, escribime."
+        eyebrow={header.eyebrow}
+        title={header.title}
+        accent={header.titleAccent}
+        description={header.description}
       />
       <FaqSection faqs={faqs} showHeading={false} />
-      <FinalCta />
+      <FinalCta content={homeSections.finalCta} />
     </>
   );
 }

@@ -7,6 +7,11 @@
 --  NOTA: si no ejecutás este archivo, no pasa nada — la primera vez que
 --  abras «Regalos» o «Preguntas frecuentes» en el panel, la aplicación
 --  siembra este mismo contenido automáticamente.
+--
+--  Los textos de más abajo (description/answer) son texto plano: son
+--  contenido de texto enriquecido válido tal cual (sin negrita ni listas)
+--  gracias a las columnas *_align agregadas en el bloque "Desde v5 → v6" de
+--  schema.sql, que tienen 'left' por defecto — no hace falta listarlas acá.
 -- ═══════════════════════════════════════════════════════════════════
 
 insert into public.gifts (title, description, category, access, featured, active, sort_order) values

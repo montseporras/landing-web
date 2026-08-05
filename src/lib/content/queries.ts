@@ -1,25 +1,40 @@
 import { logError } from "@/lib/log";
+import { coerceRichText } from "@/lib/sanitize-html";
 import { createPublicClient as createClient } from "@/lib/supabase/server";
 import type {
   AboutContent,
+  AboutSections,
+  ContactPageContent,
   Faq,
+  FaqPageContent,
+  FooterCta,
   GeneralSettings,
   Gift,
+  GiftsPageContent,
   HeroContent,
+  HomeSections,
   SeoSettings,
   Service,
+  ServicesPageContent,
   SocialLinks,
 } from "@/lib/types";
 import {
   defaultAbout,
+  defaultAboutSections,
   defaultBenefits,
+  defaultContactPage,
+  defaultFaqPage,
   defaultFaqs,
+  defaultFooterCta,
   defaultGeneral,
   defaultGifts,
+  defaultGiftsPage,
   defaultHero,
+  defaultHomeSections,
   defaultHowItWorks,
   defaultSeo,
   defaultServices,
+  defaultServicesPage,
   defaultSocial,
 } from "./defaults";
 
@@ -57,8 +72,22 @@ async function getSiteContent<T>(key: string, fallback: T): Promise<T> {
 }
 
 export const getHero = () => getSiteContent<HeroContent>("hero", defaultHero);
-export const getAbout = () =>
-  getSiteContent<AboutContent>("about", defaultAbout);
+
+/**
+ * `about.bio/story/mission` pasaron de texto plano a texto enriquecido
+ * (`{ html, align }`) en la v6. `coerceRichText` normaliza filas guardadas
+ * ANTES de ese cambio (texto plano) sin perder el contenido ni romper el
+ * render — ver `src/lib/sanitize-html.ts`.
+ */
+export async function getAbout(): Promise<AboutContent> {
+  const raw = await getSiteContent<AboutContent>("about", defaultAbout);
+  return {
+    ...raw,
+    bio: coerceRichText(raw.bio, defaultAbout.bio),
+    story: coerceRichText(raw.story, defaultAbout.story),
+    mission: coerceRichText(raw.mission, defaultAbout.mission),
+  };
+}
 export const getSocial = () =>
   getSiteContent<SocialLinks>("social", defaultSocial);
 export const getSeo = () => getSiteContent<SeoSettings>("seo", defaultSeo);
@@ -67,6 +96,20 @@ export const getGeneral = () =>
 export const getBenefits = () => getSiteContent("benefits", defaultBenefits);
 export const getHowItWorks = () =>
   getSiteContent("how_it_works", defaultHowItWorks);
+export const getHomeSections = () =>
+  getSiteContent<HomeSections>("home_sections", defaultHomeSections);
+export const getAboutSections = () =>
+  getSiteContent<AboutSections>("about_sections", defaultAboutSections);
+export const getServicesPage = () =>
+  getSiteContent<ServicesPageContent>("services_page", defaultServicesPage);
+export const getGiftsPage = () =>
+  getSiteContent<GiftsPageContent>("gifts_page", defaultGiftsPage);
+export const getFaqPage = () =>
+  getSiteContent<FaqPageContent>("faq_page", defaultFaqPage);
+export const getContactPage = () =>
+  getSiteContent<ContactPageContent>("contact_page", defaultContactPage);
+export const getFooterCta = () =>
+  getSiteContent<FooterCta>("footer", defaultFooterCta);
 
 /**
  * Lista de una tabla con fallback inteligente:
