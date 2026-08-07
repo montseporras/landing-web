@@ -13,3 +13,10 @@ npm-debug.log*
 next-env.d.ts
 .claude
 SECURITY.md
+*.key
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.env.*.local
+README_INTERNAL.md
