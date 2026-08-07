@@ -208,6 +208,20 @@ function isRichPath(paths: string[][], path: string[]): boolean {
 }
 
 /**
+ * La ruta hermana `.align` de cada campo de texto enriquecido listado en
+ * `RICH_FIELD_PATHS` (que apunta a `.html`). Se deriva automáticamente en
+ * vez de listarse a mano para que nunca queden desincronizadas.
+ */
+function isAlignPath(richPaths: string[][], path: string[]): boolean {
+  return richPaths.some(
+    (p) =>
+      p.length === path.length &&
+      path[path.length - 1] === "align" &&
+      p.slice(0, -1).every((seg, i) => seg === path[i]),
+  );
+}
+
+/**
  * Sanea recursivamente TODOS los strings de un valor JSON de `site_content`
  * antes de guardar: recorta caracteres de control en cualquier campo, y
  * aplica el saneamiento estricto de texto enriquecido (o rechaza el
@@ -227,6 +241,9 @@ function sanitizeContentNode(
       const clean = sanitizeRichTextHtml(value);
       if (clean.length > LIMITS.richText) return { value: null, rejected: true };
       return { value: clean, rejected: false };
+    }
+    if (isAlignPath(richPaths, path)) {
+      return { value: asAlign(value), rejected: false };
     }
     return { value: cleanText(value, CONTENT_STRING_MAX), rejected: false };
   }

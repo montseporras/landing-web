@@ -32,7 +32,9 @@ export function PageHeader({
             )}
           </h1>
           {description && (
-            <p className="prose-fs mt-6 max-w-2xl text-lg">{description}</p>
+            <p className="prose-fs mt-6 max-w-2xl whitespace-pre-line text-lg">
+              {description}
+            </p>
           )}
           {children}
         </Reveal>

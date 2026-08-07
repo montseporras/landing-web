@@ -41,7 +41,9 @@ export default function AdminFaqPage() {
           <UnsavedNotice show={page.isDirty} />
           <div className="flex justify-end gap-3">
             <RestoreDefaultButton
-              onClick={() => page.restoreDefault("Encabezado de FAQ")}
+              onClick={() =>
+                page.restoreDefault("Encabezado de Preguntas frecuentes")
+              }
             />
             <CancelButton onClick={page.cancel} />
             <SaveButton saving={page.saving} saved={page.saved} />

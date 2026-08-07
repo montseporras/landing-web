@@ -13,7 +13,7 @@ const links = [
   { href: "/sobre-mi", label: "Sobre mí" },
   { href: "/servicios", label: "Servicios" },
   { href: "/regalos", label: "Regalos" },
-  { href: "/faq", label: "FAQ" },
+  { href: "/faq", label: "Preguntas frecuentes" },
   { href: "/contacto", label: "Contacto" },
 ];
 

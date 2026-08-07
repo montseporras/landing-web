@@ -85,7 +85,7 @@ export function Hero({ content }: { content: HeroContent }) {
         <div className="lg:col-start-1 lg:row-start-2 lg:self-start">
           <motion.p
             {...fade(0.3)}
-            className="text-justify-soft max-w-xl text-lg leading-relaxed text-muted"
+            className="text-justify-soft max-w-xl whitespace-pre-line text-lg leading-relaxed text-muted"
           >
             {content.subtitle}
           </motion.p>

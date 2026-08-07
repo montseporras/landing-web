@@ -1,9 +1,10 @@
 import { logError } from "@/lib/log";
-import { coerceRichText } from "@/lib/sanitize-html";
+import { DEFAULT_ALIGN, coerceRichText, isValidAlign } from "@/lib/sanitize-html";
 import { createPublicClient as createClient } from "@/lib/supabase/server";
 import type {
   AboutContent,
   AboutSections,
+  BenefitItem,
   ContactPageContent,
   Faq,
   FaqPageContent,
@@ -17,8 +18,11 @@ import type {
   Service,
   ServicesPageContent,
   SocialLinks,
+  StepItem,
 } from "@/lib/types";
 import {
+  coerceBenefitItems,
+  coerceStepItems,
   defaultAbout,
   defaultAboutSections,
   defaultBenefits,
@@ -93,9 +97,21 @@ export const getSocial = () =>
 export const getSeo = () => getSiteContent<SeoSettings>("seo", defaultSeo);
 export const getGeneral = () =>
   getSiteContent<GeneralSettings>("general", defaultGeneral);
-export const getBenefits = () => getSiteContent("benefits", defaultBenefits);
-export const getHowItWorks = () =>
-  getSiteContent("how_it_works", defaultHowItWorks);
+/**
+ * Tarjetas de "Beneficios" activas, en el orden definido en el panel.
+ * `coerceBenefitItems` normaliza filas guardadas antes de que existieran
+ * `id`/`active` (ver `src/lib/content/defaults.ts`).
+ */
+export async function getBenefits(): Promise<BenefitItem[]> {
+  const raw = await getSiteContent("benefits", defaultBenefits);
+  return coerceBenefitItems(raw).filter((b) => b.active);
+}
+
+/** Pasos de "Camino Claro, Paso a Paso" activos, en el orden del panel. */
+export async function getHowItWorks(): Promise<StepItem[]> {
+  const raw = await getSiteContent("how_it_works", defaultHowItWorks);
+  return coerceStepItems(raw).filter((s) => s.active);
+}
 export const getHomeSections = () =>
   getSiteContent<HomeSections>("home_sections", defaultHomeSections);
 export const getAboutSections = () =>
@@ -123,6 +139,11 @@ async function getList<T>(
   table: "gifts" | "faqs" | "services",
   fallback: T[],
   query: (q: any) => any,
+  /** Columna de alineación de esta tabla (ej.: "description_align"). Se
+   * valida contra los 4 valores permitidos al leer — una fila con un valor
+   * ausente/corrupto (ej.: si la migración de la columna no se ejecutó
+   * todavía) nunca debe filtrar un valor arbitrario al render. */
+  alignField?: keyof T & string,
 ): Promise<T[]> {
   const supabase = createClient();
   if (!supabase) return fallback;
@@ -132,7 +153,16 @@ async function getList<T>(
       if (error) logError(`getList(${table})`, error.message);
       return fallback;
     }
-    if (data.length > 0) return data as T[];
+    if (data.length > 0) {
+      const rows = data as T[];
+      if (!alignField) return rows;
+      return rows.map((row) => {
+        const current = (row as Record<string, unknown>)[alignField];
+        return isValidAlign(current)
+          ? row
+          : { ...row, [alignField]: DEFAULT_ALIGN };
+      });
+    }
 
     const { data: mark } = await supabase
       .from("site_content")
@@ -148,20 +178,29 @@ async function getList<T>(
 
 /** Regalos descargables activos, en el orden definido en el panel. */
 export function getGifts(): Promise<Gift[]> {
-  return getList<Gift>("gifts", defaultGifts, (q) =>
-    q.eq("active", true).order("sort_order", { ascending: true }),
+  return getList<Gift>(
+    "gifts",
+    defaultGifts,
+    (q) => q.eq("active", true).order("sort_order", { ascending: true }),
+    "description_align",
   );
 }
 
 export function getFaqs(): Promise<Faq[]> {
-  return getList<Faq>("faqs", defaultFaqs, (q) =>
-    q.eq("active", true).order("sort_order", { ascending: true }),
+  return getList<Faq>(
+    "faqs",
+    defaultFaqs,
+    (q) => q.eq("active", true).order("sort_order", { ascending: true }),
+    "answer_align",
   );
 }
 
 /** Servicios activos, en el orden definido en el panel. */
 export function getServices(): Promise<Service[]> {
-  return getList<Service>("services", defaultServices, (q) =>
-    q.eq("active", true).order("sort_order", { ascending: true }),
+  return getList<Service>(
+    "services",
+    defaultServices,
+    (q) => q.eq("active", true).order("sort_order", { ascending: true }),
+    "description_align",
   );
 }

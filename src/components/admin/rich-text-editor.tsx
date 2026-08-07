@@ -24,7 +24,7 @@ import { useId, useState } from "react";
 import { useEffect } from "react";
 import { RichTextView } from "@/components/ui/rich-text";
 import type { Align, RichText } from "@/lib/sanitize-html";
-import { ALIGN_VALUES } from "@/lib/sanitize-html";
+import { ALIGN_VALUES, getTextAlignmentClass } from "@/lib/sanitize-html";
 import { isSafeUrl } from "@/lib/validation";
 import { cn } from "@/lib/utils";
 
@@ -337,7 +337,20 @@ export function RichTextEditor({
         </div>
       )}
 
-      <EditorContent editor={editor} />
+      {/* La alineación se aplica acá, envolviendo el área editable, en vez
+          de en `editorProps.attributes.class` de TipTap: así el cambio se
+          refleja al toque en cada tecleo/click de alineación (React
+          re-renderiza este wrapper), sin depender de si TipTap vuelve a
+          aplicar `editorProps` en cada render. `text-align` se hereda por
+          defecto hacia el contenido editable. */}
+      <div
+        className={cn(
+          getTextAlignmentClass(value.align),
+          value.align === "justify" && "hyphens-soft",
+        )}
+      >
+        <EditorContent editor={editor} />
+      </div>
 
       <div className="mt-1.5 flex items-center justify-between text-xs text-muted">
         <span className={cn(overLimit && "font-medium text-red-600")}>

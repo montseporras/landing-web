@@ -138,7 +138,7 @@ export default async function SobreMiPage() {
                   <h3 className="font-display text-xl text-ink">
                     {value.title}
                   </h3>
-                  <p className="text-justify-soft mt-3 text-sm leading-relaxed text-muted">
+                  <p className="text-justify-soft mt-3 whitespace-pre-line text-sm leading-relaxed text-muted">
                     {value.description}
                   </p>
                 </article>

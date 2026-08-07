@@ -54,7 +54,7 @@ export function Footer({
           <p className="mt-1 text-sm uppercase tracking-[0.2em] text-muted">
             {general.coachName}
           </p>
-          <p className="text-justify-soft mt-5 max-w-sm text-sm leading-relaxed text-muted">
+          <p className="text-justify-soft mt-5 max-w-sm whitespace-pre-line text-sm leading-relaxed text-muted">
             {general.footerText}
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
@@ -94,7 +94,7 @@ export function Footer({
         <div>
           <p className="eyebrow mb-4">{cta.eyebrow}</p>
           <p className="font-display text-lg text-ink">{cta.title}</p>
-          <p className="text-justify-soft mb-5 mt-1 text-sm leading-relaxed text-muted">
+          <p className="text-justify-soft mb-5 mt-1 whitespace-pre-line text-sm leading-relaxed text-muted">
             {cta.text}
           </p>
           <Button href={cta.buttonHref} variant="lila" size="sm">

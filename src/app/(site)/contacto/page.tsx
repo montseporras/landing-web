@@ -87,7 +87,9 @@ export default async function ContactoPage() {
             <Reveal delay={0.35}>
               <div className="rounded-3xl bg-sand-50 p-6 text-sm leading-relaxed text-muted">
                 <p className="font-display text-lg text-ink">{note.title}</p>
-                <p className="text-justify-soft mt-2">{note.text}</p>
+                <p className="text-justify-soft mt-2 whitespace-pre-line">
+                  {note.text}
+                </p>
               </div>
             </Reveal>
           </div>

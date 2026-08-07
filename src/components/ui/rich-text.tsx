@@ -1,16 +1,10 @@
 import {
   type Align,
   ensureBlockWrapped,
+  getTextAlignmentClass,
   sanitizeRichTextForRender,
 } from "@/lib/sanitize-html";
 import { cn } from "@/lib/utils";
-
-const ALIGN_CLASS: Record<Align, string> = {
-  left: "text-left",
-  center: "text-center",
-  right: "text-right",
-  justify: "text-justify-soft",
-};
 
 /**
  * Único componente del proyecto que renderiza contenido guardado con
@@ -20,8 +14,12 @@ const ALIGN_CLASS: Record<Align, string> = {
  * mostrarlo: defensa en profundidad real (dos candados distintos, no el
  * mismo candado girado dos veces), no una formalidad.
  *
- * `align` es una propiedad del CAMPO completo (no por párrafo): reutiliza
- * `.text-justify-soft` (`src/app/globals.css`) para "justificado".
+ * `align` es una propiedad del CAMPO completo (no por párrafo). La clase de
+ * alineación SIEMPRE sale de `getTextAlignmentClass()` — nunca se interpola
+ * el valor a mano — así un dato corrupto nunca puede colar una clase
+ * arbitraria. `.hyphens-soft` es una mejora tipográfica aparte (evita "ríos"
+ * de blanco en columnas angostas justificadas); no fija `text-align` por sí
+ * misma, así que nunca puede pisar la alineación elegida.
  */
 export function RichTextView({
   html,
@@ -36,7 +34,12 @@ export function RichTextView({
   if (!clean) return null;
   return (
     <div
-      className={cn("rich-content", ALIGN_CLASS[align], className)}
+      className={cn(
+        "rich-content",
+        getTextAlignmentClass(align),
+        align === "justify" && "hyphens-soft",
+        className,
+      )}
       dangerouslySetInnerHTML={{ __html: ensureBlockWrapped(clean) }}
     />
   );

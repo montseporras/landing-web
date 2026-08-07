@@ -2,13 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Reveal } from "@/components/motion/reveal";
-import type { SectionHeader } from "@/lib/types";
-
-interface Step {
-  step: string;
-  title: string;
-  description: string;
-}
+import type { SectionHeader, StepItem } from "@/lib/types";
 
 /**
  * Línea de tiempo "Camino Claro, Paso a Paso".
@@ -23,7 +17,7 @@ export function HowItWorks({
   steps,
   header,
 }: {
-  steps: Step[];
+  steps: StepItem[];
   header: SectionHeader;
 }) {
   return (
@@ -54,8 +48,9 @@ export function HowItWorks({
           <ol className="space-y-10 md:space-y-16">
             {steps.map((item, i) => {
               const isLeft = i % 2 === 0;
+              const number = String(i + 1).padStart(2, "0");
               return (
-                <li key={item.step}>
+                <li key={item.id}>
                   <motion.div
                     initial={{ opacity: 0, y: 28 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -68,7 +63,7 @@ export function HowItWorks({
                   >
                     {/* Nodo numerado — columna central propia en desktop */}
                     <span className="z-10 flex h-11 w-11 flex-none items-center justify-center rounded-full border border-gold-400 bg-cream font-display text-sm font-semibold text-gold-600 shadow-soft md:order-2 md:col-start-2 md:mx-auto md:h-12 md:w-12">
-                      {item.step}
+                      {number}
                     </span>
 
                     {/* Contenido — alterna de lado en desktop, nunca pisa el nodo */}

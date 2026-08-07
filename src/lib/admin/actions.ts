@@ -18,6 +18,8 @@ import {
   sanitizePayload,
 } from "@/lib/admin/tables";
 import {
+  coerceBenefitItems,
+  coerceStepItems,
   defaultAbout,
   defaultFaqs,
   defaultGifts,
@@ -31,20 +33,30 @@ import { createServiceClient } from "@/lib/supabase/admin";
 import { cleanText } from "@/lib/validation";
 
 /**
- * `about.bio/story/mission` pasaron de texto plano a texto enriquecido en la
- * v6. Normaliza filas guardadas ANTES de ese cambio para que el panel las
- * muestre en el editor en vez de un campo vacío — mismo mecanismo que
- * `getAbout()` usa para el sitio público (`src/lib/content/queries.ts`).
+ * Normaliza contenido guardado ANTES de que ciertos campos existieran, para
+ * que el panel lo muestre listo para editar en vez de vacío o roto — mismo
+ * mecanismo que usa `src/lib/content/queries.ts` para el sitio público. A
+ * diferencia de las funciones `get*` públicas, acá NO se filtra por
+ * `active`: la administradora tiene que poder ver y reactivar los ítems
+ * ocultos, no solo los visibles.
  */
 function coerceContentOnRead(key: string, value: unknown): unknown {
-  if (key !== "about" || !value || typeof value !== "object") return value;
-  const v = value as Record<string, unknown>;
-  return {
-    ...v,
-    bio: coerceRichText(v.bio, defaultAbout.bio),
-    story: coerceRichText(v.story, defaultAbout.story),
-    mission: coerceRichText(v.mission, defaultAbout.mission),
-  };
+  if (key === "about" && value && typeof value === "object") {
+    const v = value as Record<string, unknown>;
+    return {
+      ...v,
+      bio: coerceRichText(v.bio, defaultAbout.bio),
+      story: coerceRichText(v.story, defaultAbout.story),
+      mission: coerceRichText(v.mission, defaultAbout.mission),
+    };
+  }
+  if (key === "benefits" && Array.isArray(value)) {
+    return coerceBenefitItems(value);
+  }
+  if (key === "how_it_works" && Array.isArray(value)) {
+    return coerceStepItems(value);
+  }
+  return value;
 }
 
 /**

@@ -1,6 +1,7 @@
 import type {
   AboutContent,
   AboutSections,
+  BenefitItem,
   ContactPageContent,
   Faq,
   FaqPageContent,
@@ -15,6 +16,7 @@ import type {
   Service,
   ServicesPageContent,
   SocialLinks,
+  StepItem,
 } from "@/lib/types";
 
 /** Envuelve texto plano en un párrafo de texto enriquecido, alineado a la izquierda. */
@@ -46,44 +48,76 @@ export const defaultHero: HeroContent = {
   badges: ["+500 personas acompañadas", "Certificación ICF", "Sesiones online"],
 };
 
-export const defaultBenefits = [
+export const defaultBenefits: BenefitItem[] = [
   {
+    id: "benefit-1",
     icon: "HeartHandshake",
     title: "Gestión emocional real",
     description:
       "Aprendé a identificar, nombrar y regular lo que sentís, en lugar de reprimirlo o quedar a su merced.",
+    active: true,
   },
   {
+    id: "benefit-2",
     icon: "Brain",
     title: "Base en neurociencia",
     description:
       "Cada herramienta que uso está respaldada por cómo funciona realmente tu cerebro, sin promesas mágicas.",
+    active: true,
   },
   {
+    id: "benefit-3",
     icon: "Sparkles",
     title: "Amor propio sólido",
     description:
       "Construí una relación con vos que no dependa de la validación externa ni de resultados perfectos.",
+    active: true,
   },
   {
+    id: "benefit-4",
     icon: "Compass",
     title: "Claridad y dirección",
     description:
       "Definí qué querés de verdad y diseñá pasos concretos para llegar, a tu ritmo y sin autoexigencia tóxica.",
+    active: true,
   },
   {
+    id: "benefit-5",
     icon: "ShieldCheck",
     title: "Confianza que se sostiene",
     description:
       "Dejá de esperar sentirte lista para actuar: la seguridad se entrena con método y acompañamiento.",
+    active: true,
   },
   {
+    id: "benefit-6",
     icon: "Leaf",
     title: "Calma como hábito",
     description:
       "Prácticas simples y sostenibles para bajar el ruido mental y habitar tu día con más serenidad.",
+    active: true,
   },
 ];
+
+/**
+ * Normaliza el array de beneficios a la forma actual (`id`/`active`), sin
+ * perder contenido guardado ANTES de que esos dos campos existieran: a los
+ * ítems viejos se les asigna un `id` estable por posición y `active: true`
+ * (mismo comportamiento visual que tenían antes de este campo existir).
+ */
+export function coerceBenefitItems(items: unknown): BenefitItem[] {
+  if (!Array.isArray(items)) return defaultBenefits;
+  return items.map((raw, i) => {
+    const item = (raw ?? {}) as Partial<BenefitItem>;
+    return {
+      id: typeof item.id === "string" && item.id ? item.id : `benefit-legacy-${i}`,
+      icon: typeof item.icon === "string" && item.icon ? item.icon : "Sparkles",
+      title: typeof item.title === "string" ? item.title : "",
+      description: typeof item.description === "string" ? item.description : "",
+      active: typeof item.active === "boolean" ? item.active : true,
+    };
+  });
+}
 
 export const defaultAbout: AboutContent = {
   eyebrow: "Sobre mí",
@@ -125,32 +159,53 @@ export const defaultAbout: AboutContent = {
   videoUrl: null,
 };
 
-export const defaultHowItWorks = [
+export const defaultHowItWorks: StepItem[] = [
   {
-    step: "01",
+    id: "step-1",
     title: "Llamada de claridad",
     description:
       "Nos conocemos en una llamada gratuita de 30 minutos. Me contás dónde estás, qué te pasa y qué querés cambiar. Sin compromiso.",
+    active: true,
   },
   {
-    step: "02",
+    id: "step-2",
     title: "Diseño de tu proceso",
     description:
       "Si somos match, diseño un plan a tu medida: objetivos, frecuencia de sesiones y herramientas específicas para tu momento.",
+    active: true,
   },
   {
-    step: "03",
+    id: "step-3",
     title: "Sesiones + práctica",
     description:
       "Trabajamos en sesiones online profundas y entre sesiones aplicás ejercicios concretos. Acá es donde ocurre el cambio.",
+    active: true,
   },
   {
-    step: "04",
+    id: "step-4",
     title: "Integración",
     description:
       "Cerramos el proceso cuando las herramientas ya son tuyas: te vas con un método propio para sostener lo logrado.",
+    active: true,
   },
 ];
+
+/**
+ * Normaliza el array de pasos a la forma actual (`id`/`active`, sin el
+ * viejo campo `step`), sin perder contenido guardado antes de este cambio.
+ */
+export function coerceStepItems(items: unknown): StepItem[] {
+  if (!Array.isArray(items)) return defaultHowItWorks;
+  return items.map((raw, i) => {
+    const item = (raw ?? {}) as Partial<StepItem>;
+    return {
+      id: typeof item.id === "string" && item.id ? item.id : `step-legacy-${i}`,
+      title: typeof item.title === "string" ? item.title : "",
+      description: typeof item.description === "string" ? item.description : "",
+      active: typeof item.active === "boolean" ? item.active : true,
+    };
+  });
+}
 
 export const defaultServices: Service[] = [
   {
@@ -507,7 +562,7 @@ export const defaultGiftsPage: GiftsPageContent = {
 
 export const defaultFaqPage: FaqPageContent = {
   header: {
-    eyebrow: "FAQ",
+    eyebrow: "Preguntas frecuentes",
     title: "Preguntas",
     titleAccent: "frecuentes",
     description:

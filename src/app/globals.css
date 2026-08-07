@@ -52,8 +52,21 @@
     text-wrap: pretty;
   }
 
+  /*
+   * Mejora tipográfica del texto justificado (evita "ríos" de blanco en
+   * columnas angostas), separada a propósito de la clase de alineación en
+   * sí: así ninguna clase de refuerzo tipográfico fija/pisa `text-align`.
+   * La alineación real la decide siempre `getTextAlignmentClass()`
+   * (`src/lib/sanitize-html.ts`).
+   */
+  .hyphens-soft {
+    -webkit-hyphens: auto;
+    hyphens: auto;
+    text-wrap: pretty;
+  }
+
   .prose-fs {
-    @apply text-justify-soft text-[1.0625rem] leading-relaxed text-muted;
+    @apply text-justify-soft whitespace-pre-line text-[1.0625rem] leading-relaxed text-muted;
   }
 
   /*

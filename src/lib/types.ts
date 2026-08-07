@@ -94,6 +94,25 @@ export interface Service {
   sort_order: number;
 }
 
+/** Tarjeta de la sección "Beneficios" del inicio (dentro de `site_content.benefits`). */
+export interface BenefitItem {
+  id: string;
+  icon: string;
+  title: string;
+  description: string;
+  active: boolean;
+}
+
+/** Paso de "Camino Claro, Paso a Paso" (dentro de `site_content.how_it_works`).
+ * El número (01, 02…) se calcula solo según el orden de los pasos activos —
+ * no se guarda como campo editable. */
+export interface StepItem {
+  id: string;
+  title: string;
+  description: string;
+  active: boolean;
+}
+
 /** Contenido editable por sección, guardado como JSON en site_content. */
 export interface HeroContent {
   eyebrow: string;

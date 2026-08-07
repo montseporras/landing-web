@@ -1,18 +1,12 @@
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { DynamicIcon } from "@/components/ui/icon";
-import type { SectionHeader } from "@/lib/types";
-
-interface Benefit {
-  icon: string;
-  title: string;
-  description: string;
-}
+import type { BenefitItem, SectionHeader } from "@/lib/types";
 
 export function Benefits({
   items,
   header,
 }: {
-  items: Benefit[];
+  items: BenefitItem[];
   header: SectionHeader;
 }) {
   return (
@@ -31,7 +25,7 @@ export function Benefits({
 
         <Stagger className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((benefit) => (
-            <StaggerItem key={benefit.title}>
+            <StaggerItem key={benefit.id}>
               <article className="group h-full rounded-4xl border border-sand-200 bg-white/70 p-8 backdrop-blur transition-all duration-500 hover:-translate-y-1.5 hover:border-gold-300 hover:shadow-lifted">
                 <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-lavender-100 text-lavender-500 transition-colors duration-500 group-hover:bg-gold-300/30 group-hover:text-gold-600">
                   <DynamicIcon name={benefit.icon} />

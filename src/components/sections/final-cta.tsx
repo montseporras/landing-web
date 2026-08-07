@@ -22,7 +22,7 @@ export function FinalCta({ content }: { content: FinalCtaContent }) {
                 {content.titleAccent}
               </em>
             </h2>
-            <p className="text-justify-soft relative mx-auto mt-6 max-w-xl text-base leading-relaxed text-cream/70">
+            <p className="text-justify-soft relative mx-auto mt-6 max-w-xl whitespace-pre-line text-base leading-relaxed text-cream/70">
               {content.description}
             </p>
             <div className="relative mt-10 flex flex-wrap justify-center gap-4">

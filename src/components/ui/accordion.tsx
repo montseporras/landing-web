@@ -11,7 +11,10 @@ export interface AccordionItem {
   id: string;
   question: string;
   answer: string;
-  answerAlign?: Align;
+  /** Requerido a propósito (no `?:`): así un futuro caller que se olvide de
+   * pasarlo da un error de tipos en vez de perder la alineación en
+   * silencio con un `?? "left"`. */
+  answerAlign: Align;
 }
 
 /** Acordeón animado y accesible para las preguntas frecuentes. */
@@ -63,7 +66,7 @@ export function Accordion({
                 >
                   <RichTextView
                     html={item.answer}
-                    align={item.answerAlign ?? "left"}
+                    align={item.answerAlign}
                     className="pb-6 pr-10 leading-relaxed text-muted"
                   />
                 </motion.div>

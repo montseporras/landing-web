@@ -26,17 +26,38 @@ export function useSiteContent<T>(key: string, fallback: T) {
 
   useEffect(() => {
     let cancelled = false;
-    adminGetContent(key).then(({ data, error: loadError }) => {
-      if (cancelled) return;
-      if (loadError === "not_configured") setConfigured(false);
-      else if (loadError && loadError !== "no_session") setError(loadError);
-      if (data) {
-        const merged = { ...fallback, ...(data as T) };
-        setValue(merged);
-        setSavedSnapshot(JSON.stringify(merged));
-      }
-      setLoading(false);
-    });
+    adminGetContent(key)
+      .then(({ data, error: loadError }) => {
+        if (cancelled) return;
+        if (loadError === "not_configured") setConfigured(false);
+        else if (loadError && loadError !== "no_session") setError(loadError);
+        if (data) {
+          // Los valores con forma de arreglo (ej.: benefits, how_it_works) no
+          // se pueden mezclar con spread de objeto: {...[a,b], ...[c]} da un
+          // objeto con claves numéricas, no un arreglo, y rompe cualquier
+          // .map() posterior. Un arreglo guardado ya viene completo por ítem
+          // (coercionado en el servidor), así que se usa tal cual.
+          const merged = Array.isArray(data)
+            ? (data as T)
+            : ({ ...fallback, ...(data as T) } as T);
+          setValue(merged);
+          setSavedSnapshot(JSON.stringify(merged));
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        // Sin esto, un fallo de red al llamar a la Server Action (ej.: un
+        // corte momentáneo hacia Supabase) queda como una promesa rechazada
+        // sin manejar, y React desmonta TODO el árbol con "Application
+        // error" — incluso si esta sección en particular no era crítica.
+        // El fallback (contenido de fábrica, ya seteado por useState) queda
+        // en pantalla en vez de romper la página entera.
+        if (cancelled) return;
+        setError(
+          "No se pudo cargar esta sección. Recargá la página e intentá de nuevo.",
+        );
+        setLoading(false);
+      });
     return () => {
       cancelled = true;
     };
@@ -59,20 +80,29 @@ export function useSiteContent<T>(key: string, fallback: T) {
     setSaving(true);
     setSaved(false);
     setError(null);
-    const { error: saveError } = await adminUpsertContent(key, value);
+    let result;
+    try {
+      result = await adminUpsertContent(key, value);
+    } catch {
+      // Mismo motivo que en la carga: un fallo de red no debe tirar abajo
+      // toda la página, solo esta sección.
+      setSaving(false);
+      setError("No se pudo guardar. Revisá tu conexión e intentá de nuevo.");
+      return false;
+    }
     setSaving(false);
-    if (!saveError) {
+    if (!result.error) {
       setSaved(true);
       setSavedSnapshot(JSON.stringify(value));
       setTimeout(() => setSaved(false), 2500);
       return true;
     }
     setError(
-      saveError === "not_configured"
+      result.error === "not_configured"
         ? "El backend no está configurado."
-        : saveError === "no_session"
+        : result.error === "no_session"
           ? "Tu sesión expiró. Recargá la página e ingresá de nuevo."
-          : saveError,
+          : result.error,
     );
     return false;
   }, [key, value]);

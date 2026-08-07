@@ -106,6 +106,28 @@ export function isValidAlign(value: unknown): value is Align {
   );
 }
 
+/**
+ * Única función autorizada para convertir una alineación en clase de
+ * Tailwind. Punto central de la lógica align→clase: nada en el proyecto debe
+ * interpolar el valor de alineación en un className a mano. Cualquier valor
+ * que no sea uno de los 4 permitidos (por ejemplo un dato corrupto leído de
+ * Supabase) cae al valor por defecto — nunca deja pasar una clase arbitraria.
+ */
+export function getTextAlignmentClass(align: unknown): string {
+  switch (align) {
+    case "center":
+      return "text-center";
+    case "right":
+      return "text-right";
+    case "justify":
+      return "text-justify";
+    case "left":
+      return "text-left";
+    default:
+      return "text-left";
+  }
+}
+
 /** Envuelve texto sin etiqueta de bloque en un `<p>` (nunca dejar texto suelto). */
 export function ensureBlockWrapped(html: string): string {
   const trimmed = html.trim();

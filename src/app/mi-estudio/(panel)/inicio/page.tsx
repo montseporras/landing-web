@@ -1,6 +1,9 @@
 "use client";
 
-import { SectionHeaderEditor } from "@/components/admin/content-editors";
+import {
+  OrderedListEditor,
+  SectionHeaderEditor,
+} from "@/components/admin/content-editors";
 import { MediaUpload } from "@/components/admin/media-upload";
 import {
   AdminCard,
@@ -16,12 +19,47 @@ import {
 import { useSiteContent } from "@/components/admin/use-site-content";
 import { Input, Textarea } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { defaultHero, defaultHomeSections } from "@/lib/content/defaults";
+import {
+  defaultBenefits,
+  defaultHero,
+  defaultHomeSections,
+  defaultHowItWorks,
+} from "@/lib/content/defaults";
 import { IMAGE_SPECS } from "@/lib/media";
+import type { BenefitItem, StepItem } from "@/lib/types";
+
+/** Íconos disponibles para las tarjetas de beneficios (nombres de Lucide). */
+const BENEFIT_ICON_OPTIONS = [
+  { value: "HeartHandshake", label: "Acompañamiento" },
+  { value: "Brain", label: "Mente / neurociencia" },
+  { value: "Sparkles", label: "Destello" },
+  { value: "Compass", label: "Brújula / dirección" },
+  { value: "ShieldCheck", label: "Confianza / escudo" },
+  { value: "Leaf", label: "Calma / hoja" },
+  { value: "Lightbulb", label: "Idea / claridad" },
+  { value: "Users", label: "Equipo / grupo" },
+  { value: "MessageCircle", label: "Conversación" },
+];
+
+function createBenefit(): BenefitItem {
+  return {
+    id: crypto.randomUUID(),
+    icon: "Sparkles",
+    title: "",
+    description: "",
+    active: true,
+  };
+}
+
+function createStep(): StepItem {
+  return { id: crypto.randomUUID(), title: "", description: "", active: true };
+}
 
 export default function AdminInicioPage() {
   const hero = useSiteContent("hero", defaultHero);
   const sections = useSiteContent("home_sections", defaultHomeSections);
+  const benefits = useSiteContent("benefits", defaultBenefits);
+  const steps = useSiteContent("how_it_works", defaultHowItWorks);
 
   if (!hero.configured) {
     return (
@@ -32,7 +70,7 @@ export default function AdminInicioPage() {
     );
   }
 
-  if (hero.loading || sections.loading) {
+  if (hero.loading || sections.loading || benefits.loading || steps.loading) {
     return (
       <>
         <AdminHeader title="Página de inicio" />
@@ -42,14 +80,15 @@ export default function AdminInicioPage() {
   }
 
   const { value, setValue } = hero;
-  const isDirty = hero.isDirty || sections.isDirty;
-  const saving = hero.saving || sections.saving;
-  const saved = hero.saved && sections.saved;
-  const error = hero.error ?? sections.error;
+  const isDirty =
+    hero.isDirty || sections.isDirty || benefits.isDirty || steps.isDirty;
+  const saving = hero.saving || sections.saving || benefits.saving || steps.saving;
+  const saved = hero.saved && sections.saved && benefits.saved && steps.saved;
+  const error = hero.error ?? sections.error ?? benefits.error ?? steps.error;
   const s = sections.value;
 
   async function saveAll() {
-    await Promise.all([hero.save(), sections.save()]);
+    await Promise.all([hero.save(), sections.save(), benefits.save(), steps.save()]);
   }
 
   function cancelAll() {
@@ -58,6 +97,8 @@ export default function AdminInicioPage() {
     }
     hero.setValue(hero.lastSaved);
     sections.setValue(sections.lastSaved);
+    benefits.setValue(benefits.lastSaved);
+    steps.setValue(steps.lastSaved);
   }
 
   return (
@@ -226,16 +267,47 @@ export default function AdminInicioPage() {
         <SectionHeaderEditor
           title="Sección: Beneficios"
           value={s.benefits}
-          onChange={(benefits) =>
-            sections.setValue({ ...s, benefits })
+          onChange={(benefitsHeader) =>
+            sections.setValue({ ...s, benefits: benefitsHeader })
           }
+        />
+        <OrderedListEditor
+          title="Tarjetas de beneficios"
+          hint="Cada tarjeta muestra un ícono, un título y una descripción breve."
+          itemName="beneficio"
+          items={benefits.value}
+          onChange={benefits.setValue}
+          createItem={createBenefit}
+          renderExtraFields={(item, update) => (
+            <Field label="Ícono">
+              <select
+                value={item.icon}
+                onChange={(e) => update({ icon: e.target.value })}
+                className="mb-3 w-full rounded-2xl border border-sand-200 bg-white px-4 py-3 text-sm text-ink focus:border-lavender-400 focus:outline-none"
+              >
+                {BENEFIT_ICON_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
         />
         <SectionHeaderEditor
           title="Sección: Camino paso a paso"
           value={s.howItWorks}
-          onChange={(howItWorks) =>
-            sections.setValue({ ...s, howItWorks })
+          onChange={(howItWorksHeader) =>
+            sections.setValue({ ...s, howItWorks: howItWorksHeader })
           }
+        />
+        <OrderedListEditor
+          title="Pasos del proceso"
+          hint="El número de cada paso (01, 02…) se genera solo, según el orden y los pasos activos — no hace falta escribirlo."
+          itemName="paso"
+          items={steps.value}
+          onChange={steps.setValue}
+          createItem={createStep}
         />
         <SectionHeaderEditor
           title="Sección: Servicios"
@@ -390,6 +462,8 @@ export default function AdminInicioPage() {
               onClick={() => {
                 hero.restoreDefault("Página de inicio");
                 sections.restoreDefault("Secciones de inicio");
+                benefits.restoreDefault("Tarjetas de beneficios");
+                steps.restoreDefault("Pasos del proceso");
               }}
             />
             <CancelButton onClick={cancelAll} />
