@@ -137,7 +137,7 @@ export function Navbar({ brandName = "FS" }: { brandName?: string }) {
               ))}
               <li className="pt-3">
                 <Button href="/contacto" variant="lila" className="w-full">
-                  Solicitar conversación inicial gratuita
+                  Quiero conversar
                 </Button>
               </li>
             </ul>

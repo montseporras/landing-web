@@ -138,7 +138,7 @@ export function ContactForms() {
               <Textarea
                 id="call-message"
                 name="message"
-                placeholder="Cuéntame brevemente qué te gustaría trabajar...…"
+                placeholder="Cuéntame brevemente qué te gustaría trabajar..."
               />
             </div>
             <SubmitButton

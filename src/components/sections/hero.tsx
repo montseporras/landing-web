@@ -73,7 +73,7 @@ export function Hero({ content }: { content: HeroContent }) {
             className="absolute -bottom-6 left-2 max-w-[230px] rounded-3xl border border-sand-200 bg-white/90 px-5 py-4 shadow-soft backdrop-blur sm:-left-6 md:-left-12"
           >
             <p className="font-display text-lg text-ink">
-              “La calma se entrena.”
+              “Cambiar comienza por comprender”
             </p>
             <p className="mt-0.5 text-xs uppercase tracking-[0.18em] text-muted">
               Francis Salazar
