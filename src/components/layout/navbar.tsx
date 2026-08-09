@@ -94,7 +94,7 @@ export function Navbar({ brandName = "FS" }: { brandName?: string }) {
 
         <div className="hidden lg:block">
           <Button href="/contacto" variant="lila" size="sm">
-            Reservar llamada
+            Solicitar conversación inicial
           </Button>
         </div>
 
@@ -137,7 +137,7 @@ export function Navbar({ brandName = "FS" }: { brandName?: string }) {
               ))}
               <li className="pt-3">
                 <Button href="/contacto" variant="lila" className="w-full">
-                  Reservar llamada gratuita
+                  Solicitar conversación inicial gratuita
                 </Button>
               </li>
             </ul>

@@ -108,7 +108,7 @@ export function Footer({
           <p>
             © {year} {general.legalName}. Todos los derechos reservados.
           </p>
-          <p>Hecho con calma y neurociencia.</p>
+          <p></p>
         </div>
       </div>
     </footer>

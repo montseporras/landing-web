@@ -103,7 +103,7 @@ const TABLES: Record<string, Record<string, Sanitizer>> = {
     description_align: asAlign,
     features: asLines,
     price_label: asNullableText(60),
-    cta_label: (v) => cleanText(v, 80) || "Reservar llamada",
+    cta_label: (v) => cleanText(v, 80) || "Solicitar conversación inicial",
     icon: (v) => cleanText(v, 40) || "Sparkles",
     image: asNullableUrl,
     highlighted: asBool,

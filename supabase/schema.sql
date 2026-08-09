@@ -55,7 +55,7 @@ create table if not exists public.services (
   -- Características ("qué incluye"): una por elemento del array
   features text[] not null default '{}',
   price_label text,
-  cta_label text not null default 'Reservar llamada',
+  cta_label text not null default 'Solicitar conversación inicial',
   icon text not null default 'Sparkles',
   image text,
   highlighted boolean not null default false,
@@ -222,7 +222,7 @@ end $$;
 --   description text not null default '',
 --   features text[] not null default '{}',
 --   price_label text,
---   cta_label text not null default 'Reservar llamada',
+--   cta_label text not null default 'Solicitar conversación inicial',
 --   icon text not null default 'Sparkles',
 --   image text,
 --   highlighted boolean not null default false,

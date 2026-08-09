@@ -61,7 +61,7 @@ export function ContactForms() {
       >
         {(
           [
-            { id: "llamada", label: "Reservar llamada" },
+            { id: "llamada", label: "Solicitar conversación inicial" },
             { id: "contacto", label: "Enviar mensaje" },
           ] as const
         ).map((t) => (
@@ -95,7 +95,7 @@ export function ContactForms() {
                 className="mt-0.5 flex-none text-lavender-500"
                 aria-hidden
               />
-              La llamada de claridad dura 30 minutos, es gratuita y sin
+              La conversación inicial es gratuita y tiene una duración aproximada de 30 minutos. Es un espacio para conocernos, escuchar qué necesitas y explicarte cómo trabajoa 30 minutos, es gratuita y sin
               compromiso.
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -138,11 +138,11 @@ export function ContactForms() {
               <Textarea
                 id="call-message"
                 name="message"
-                placeholder="Contame brevemente tu momento actual…"
+                placeholder="Cuéntame brevemente qué te gustaría trabajar...…"
               />
             </div>
             <SubmitButton
-              label="Solicitar llamada gratuita"
+              label="Solicitar conversación inicial"
               pendingLabel="Enviando…"
             />
             {callState.message && !callState.ok && (

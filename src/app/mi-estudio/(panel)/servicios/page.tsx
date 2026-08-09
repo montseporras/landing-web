@@ -102,7 +102,7 @@ export default function AdminServiciosPage() {
             name: "cta_label",
             label: "Texto del botón",
             kind: "text",
-            placeholder: "Reservar llamada de claridad",
+            placeholder: "Solicitar conversación inicial de claridad",
           },
           {
             name: "icon",

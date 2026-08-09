@@ -43,7 +43,7 @@ export const defaultHero: HeroContent = {
   subtitle:
     "Soy Francis Salazar. Acompaño a mujeres y hombres a gestionar sus emociones, reconstruir su confianza y vivir con calma, claridad y amor propio — con herramientas de coaching respaldadas por la neurociencia.",
   primaryCta: { label: "Descargar regalo gratuito", href: "/regalos" },
-  secondaryCta: { label: "Reservar una llamada", href: "/contacto" },
+  secondaryCta: { label: "Quiero conversar con Francis", href: "/contacto" },
   image: null,
   badges: ["+500 personas acompañadas", "Certificación ICF", "Sesiones online"],
 };
@@ -221,7 +221,7 @@ export const defaultServices: Service[] = [
       "Acompañamiento por WhatsApp",
     ],
     price_label: null,
-    cta_label: "Reservar llamada de claridad",
+    cta_label: "Solicitar conversación inicial de claridad",
     icon: "UserRound",
     image: null,
     highlighted: true,
@@ -594,6 +594,6 @@ export const defaultFooterCta: FooterCta = {
   eyebrow: "¿Empezamos?",
   title: "Reservá tu llamada de claridad",
   text: "30 minutos, gratis y sin compromiso, para conocernos y ver cómo puedo acompañarte.",
-  buttonLabel: "Reservar llamada",
+  buttonLabel: "Solicitar conversación inicial",
   buttonHref: "/contacto",
 };
