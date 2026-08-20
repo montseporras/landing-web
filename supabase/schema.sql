@@ -34,8 +34,21 @@ create table if not exists public.gifts (
   file_url text,
   -- Enlace externo (solo para access = 'enlace')
   url text,
-  -- Modo de acceso: descarga directa / pedir email / enlace externo
-  access text not null default 'directo' check (access in ('directo','email','enlace')),
+  -- Modo de acceso: descarga directa / pedir email / enlace externo /
+  -- edición breve + edición completa
+  access text not null default 'directo' check (access in ('directo','email','enlace','breve_completo')),
+  -- Edición completa (solo para access = 'breve_completo'): la edición breve
+  -- reutiliza file_url (descarga directa, sin datos); la completa se guarda
+  -- como PATH dentro del bucket privado "gifts-full" (nunca una URL pública:
+  -- se entrega generando una URL firmada temporal recién al enviar el
+  -- formulario). Los demás campos son los textos configurables de ese
+  -- formulario ("Quiero la edición completa").
+  full_file_path text,
+  full_cta_label text,
+  full_form_title text,
+  full_form_intro text,
+  full_form_button_label text,
+  full_form_success_message text,
   -- Recurso destacado: se muestra en grande en la portada (eBook principal)
   featured boolean not null default false,
   active boolean not null default true,
@@ -292,3 +305,44 @@ alter table public.faqs add constraint faqs_answer_no_script_check
 --    contacto, footer) siguen viviendo en site_content — no necesitan
 --    columnas nuevas, se guardan la primera vez que se edita esa sección
 --    desde el panel (igual que siempre funcionó "hero", "about", etc.).
+
+-- ═══════════════════════════════════════════════════════════════════
+--  Desde v6 → v7  (EJECUTAR ESTO si ya tenías la base creada en v6)
+--  Copiá y ejecutá este bloque completo en el SQL Editor de Supabase.
+--
+--  Agrega la modalidad de regalo "Edición breve + edición completa":
+--  la tarjeta pública de /regalos descarga la edición breve sin pedir nada
+--  (reutiliza el campo file_url que ya existía) y un CTA — dentro del PDF
+--  breve y también en la propia tarjeta — lleva a un formulario del sitio
+--  que pide nombre + email antes de entregar la edición completa.
+--
+--  100% aditivo e IDEMPOTENTE: se puede ejecutar más de una vez sin romper
+--  nada (todo usa "if not exists"/"on conflict do nothing"). Ningún regalo
+--  ni modo de acceso existente se modifica. Si tu base ya es v7 (creada
+--  después de este cambio), este bloque no hace nada.
+-- ═══════════════════════════════════════════════════════════════════
+-- 1) Nuevo modo de acceso
+alter table public.gifts drop constraint if exists gifts_access_check;
+alter table public.gifts add constraint gifts_access_check
+  check (access in ('directo','email','enlace','breve_completo'));
+
+-- 2) Archivo de la edición completa (path privado, ver punto 3) + textos
+--    configurables del formulario de solicitud
+alter table public.gifts add column if not exists full_file_path text;
+alter table public.gifts add column if not exists full_cta_label text;
+alter table public.gifts add column if not exists full_form_title text;
+alter table public.gifts add column if not exists full_form_intro text;
+alter table public.gifts add column if not exists full_form_button_label text;
+alter table public.gifts add column if not exists full_form_success_message text;
+
+-- 3) Bucket PRIVADO para los archivos de edición completa: a diferencia de
+--    "media" (público), acá nadie puede leer por URL directa, ni siquiera
+--    con el enlace — el acceso público queda denegado por defecto al no ser
+--    público. El archivo se entrega generando una URL firmada temporal
+--    (expira en 1 hora) con la service key, del lado del servidor, recién
+--    cuando la persona completa el formulario (ver submitGiftFullEdition en
+--    src/lib/actions.ts). No hace falta ninguna policy adicional. El bucket
+--    "media" y todos los regalos existentes siguen exactamente igual.
+insert into storage.buckets (id, name, public)
+values ('gifts-full', 'gifts-full', false)
+on conflict (id) do nothing;

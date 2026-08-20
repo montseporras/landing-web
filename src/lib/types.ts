@@ -20,11 +20,14 @@ export interface RichText {
 
 /**
  * Modo de acceso a un regalo, configurable por la administradora:
- * - "directo": clic y descarga inmediata del archivo
- * - "email":   pide nombre (opcional) + email antes de entregar el archivo
- * - "enlace":  redirige a un enlace externo (Drive, YouTube, Canva, etc.)
+ * - "directo":        clic y descarga inmediata del archivo
+ * - "email":          pide nombre (opcional) + email antes de entregar el archivo
+ * - "enlace":         redirige a un enlace externo (Drive, YouTube, Canva, etc.)
+ * - "breve_completo": descarga inmediata de una edición breve (file_url,
+ *                      sin pedir nada); un CTA lleva a un formulario que pide
+ *                      nombre + email antes de entregar la edición completa.
  */
-export type GiftAccess = "directo" | "email" | "enlace";
+export type GiftAccess = "directo" | "email" | "enlace" | "breve_completo";
 
 export interface Gift {
   id: string;
@@ -39,6 +42,21 @@ export interface Gift {
   /** Enlace externo (solo para access = "enlace"). */
   url: string | null;
   access: GiftAccess;
+  /**
+   * Edición completa (solo para access = "breve_completo"). `full_file_path`
+   * es la ruta dentro del bucket privado "gifts-full" — NUNCA una URL
+   * pública — y solo debe llegar al servidor, jamás al navegador antes de
+   * completar el formulario (ver `getGifts`/`getGiftById` en
+   * `src/lib/content/queries.ts`, que la fuerzan a `null` en las lecturas
+   * públicas). Los demás campos son los textos configurables del CTA y del
+   * formulario "Quiero la edición completa".
+   */
+  full_file_path?: string | null;
+  full_cta_label?: string | null;
+  full_form_title?: string | null;
+  full_form_intro?: string | null;
+  full_form_button_label?: string | null;
+  full_form_success_message?: string | null;
   /** Recurso destacado: se muestra en grande en la portada. */
   featured: boolean;
   active: boolean;

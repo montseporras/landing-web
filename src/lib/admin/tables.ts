@@ -73,8 +73,21 @@ const asAlign: Sanitizer = (v) =>
     ? v
     : DEFAULT_ALIGN;
 
-const GIFT_ACCESS = new Set(["directo", "email", "enlace"]);
+const GIFT_ACCESS = new Set(["directo", "email", "enlace", "breve_completo"]);
 const SUBMISSION_STATUS = new Set(["nuevo", "leido", "archivado"]);
+
+/**
+ * Ruta dentro del bucket privado "gifts-full" (nunca una URL): la genera
+ * `adminUploadFile` (ver `src/lib/admin/actions.ts`), así que solo puede
+ * contener los caracteres seguros que ese código produce. Rechaza cualquier
+ * intento de "..\/" (recorrido de directorios) o valor con formato ajeno.
+ */
+const asStoragePath: Sanitizer = (v) => {
+  const s = cleanText(v, 300);
+  if (!s) return null;
+  if (s.includes("..") || !/^[A-Za-z0-9/_.-]+$/.test(s)) return undefined;
+  return s;
+};
 
 const TABLES: Record<string, Record<string, Sanitizer>> = {
   gifts: {
@@ -86,6 +99,12 @@ const TABLES: Record<string, Record<string, Sanitizer>> = {
     file_url: asNullableUrl,
     url: asNullableUrl,
     access: (v) => (GIFT_ACCESS.has(String(v)) ? String(v) : "directo"),
+    full_file_path: asStoragePath,
+    full_cta_label: asNullableText(120),
+    full_form_title: asNullableText(LIMITS.title),
+    full_form_intro: asNullableText(LIMITS.description),
+    full_form_button_label: asNullableText(120),
+    full_form_success_message: asNullableText(LIMITS.description),
     featured: asBool,
     active: asBool,
     sort_order: asInt,

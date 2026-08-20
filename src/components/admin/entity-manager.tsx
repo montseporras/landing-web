@@ -48,6 +48,21 @@ export interface FieldDef {
   required?: boolean;
   /** Solo para kind:"richtext" — nombre de la columna hermana de alineación. */
   alignField?: string;
+  /** Solo para kind:"image"/"file" — carpeta de subida (por defecto, el nombre de la tabla). */
+  folder?: string;
+  /** Solo para kind:"image"/"file" — bucket de subida ("media" público por defecto, o "gifts-full" privado). */
+  bucket?: "media" | "gifts-full";
+  /**
+   * Predicado opcional: el campo solo se muestra, se valida y se envía al
+   * guardar si esta función devuelve `true` para el estado actual del
+   * formulario (ej.: mostrar «Enlace externo» solo cuando `access ===
+   * "enlace"`). Sin `showWhen`, el campo se comporta como siempre (visible
+   * en todos los casos). Los campos ocultos NO se borran del estado local
+   * (así no se pierden datos si se vuelve al modo anterior), pero se
+   * excluyen del payload que se envía al guardar — el valor que ya tenían
+   * en la base queda intacto (actualización parcial).
+   */
+  showWhen?: (values: Record<string, unknown>) => boolean;
 }
 
 interface Row {
@@ -181,8 +196,12 @@ export function EntityManager({
   async function saveEditing() {
     if (!editing) return;
 
-    // Validación en el navegador antes de tocar el servidor.
-    for (const f of fields) {
+    const visible = fields.filter((f) => !f.showWhen || f.showWhen(editing));
+
+    // Validación en el navegador antes de tocar el servidor: solo de los
+    // campos visibles para el modo actual (los de otros modos no deben
+    // bloquear el guardado).
+    for (const f of visible) {
       if (f.required && !String(editing[f.name] ?? "").trim()) {
         setError(`Completá el campo «${f.label}» antes de guardar.`);
         return;
@@ -191,7 +210,17 @@ export function EntityManager({
 
     setSaving(true);
     setError(null);
-    const { id, ...payload } = editing;
+    const { id, ...rest } = editing;
+    // Solo se envían los campos visibles para el modo actual (más los que
+    // no pertenecen a `fields`, ej. active/sort_order). Los campos de OTROS
+    // modos se omiten del payload — como es una actualización parcial, el
+    // valor que ya tenían en la base queda intacto en vez de sobrescribirse.
+    const visibleNames = new Set(visible.map((f) => f.name));
+    const fieldNames = new Set(fields.map((f) => f.name));
+    const payload: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(rest)) {
+      if (!fieldNames.has(key) || visibleNames.has(key)) payload[key] = value;
+    }
 
     const result = isNew
       ? await adminInsert(table, payload)
@@ -319,7 +348,8 @@ export function EntityManager({
             value={(v as string) ?? null}
             onChange={(url) => set(url)}
             kind="image"
-            folder={table}
+            folder={f.folder ?? table}
+            bucket={f.bucket ?? "media"}
             spec={f.spec}
           />
         );
@@ -329,7 +359,8 @@ export function EntityManager({
             value={(v as string) ?? null}
             onChange={(url) => set(url)}
             kind="file"
-            folder={table}
+            folder={f.folder ?? table}
+            bucket={f.bucket ?? "media"}
             spec={f.spec}
           />
         );
@@ -377,11 +408,13 @@ export function EntityManager({
       className="border-gold-300"
     >
       <div className="space-y-4">
-        {fields.map((f) => (
-          <Field key={f.name} label={f.label} hint={f.hint}>
-            {renderField(f)}
-          </Field>
-        ))}
+        {fields
+          .filter((f) => !f.showWhen || f.showWhen(editing))
+          .map((f) => (
+            <Field key={f.name} label={f.label} hint={f.hint}>
+              {renderField(f)}
+            </Field>
+          ))}
         {isDirty && (
           <p className="text-xs text-gold-600">
             Tenés cambios sin guardar.

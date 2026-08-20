@@ -461,6 +461,14 @@ type WriteResult = {
  * se reintenta sin ese campo (se guarda el resto igual; esa columna en
  * particular vuelve a intentarse en el próximo guardado, una vez migrada la
  * base). Deja rastro en el log para que quede claro que falta correr SQL.
+ *
+ * Cada reintento solo puede quitar UNA columna (la que reporta el error), así
+ * que el tope de intentos tiene que poder cubrir el caso de que falten
+ * VARIAS columnas a la vez en el mismo guardado (ej.: un regalo en modo
+ * "Edición breve + edición completa" antes de correr esa migración, que
+ * manda 6 columnas nuevas juntas) — si no, se corta antes de llegar a un
+ * payload que sí pueda guardarse. Por eso el tope escala con la cantidad de
+ * campos del payload en vez de un número fijo.
  */
 async function writeWithMigrationFallback(
   run: (payload: Record<string, unknown>) => Promise<WriteResult>,
@@ -468,7 +476,8 @@ async function writeWithMigrationFallback(
   context: string,
 ): Promise<WriteResult> {
   let attempt = { ...payload };
-  for (let i = 0; i < 5; i++) {
+  const maxAttempts = Object.keys(payload).length + 1;
+  for (let i = 0; i < maxAttempts; i++) {
     const { data, error } = await run(attempt);
     if (!error) return { data, error: null };
 
@@ -616,7 +625,9 @@ export async function adminHideSubmission(
   return { data: null, error: null };
 }
 
-// ── Subida de archivos (bucket media) ────────────────────────────────
+// ── Subida de archivos (bucket media / gifts-full) ───────────────────
+
+const UPLOAD_BUCKETS = new Set(["media", "gifts-full"]);
 
 export async function adminUploadFile(
   formData: FormData,
@@ -630,6 +641,13 @@ export async function adminUploadFile(
     String(formData.get("folder") ?? "uploads")
       .replace(/[^a-z0-9_-]/gi, "")
       .slice(0, 40) || "uploads";
+  // "gifts-full" es un bucket PRIVADO (edición completa de regalos en modo
+  // "Edición breve + edición completa"); cualquier otro valor cae en "media"
+  // (público), el bucket de siempre.
+  const bucketId = formData.get("bucket") === "gifts-full" ? "gifts-full" : "media";
+  if (!UPLOAD_BUCKETS.has(bucketId)) {
+    return { data: null, error: "No se pudo subir el archivo. Intentalo nuevamente." };
+  }
 
   if (!(file instanceof File)) {
     return { data: null, error: "No se recibió ningún archivo." };
@@ -642,17 +660,25 @@ export async function adminUploadFile(
   const ext = fileExtension(file.name);
   const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
-  const { error } = await g.client.storage.from("media").upload(path, file, {
+  const { error } = await g.client.storage.from(bucketId).upload(path, file, {
     contentType: file.type || undefined,
     upsert: false,
   });
   if (error) {
-    logError("adminUploadFile", error.message);
+    // El bucket va en el scope del log (no en el mensaje al usuario) para
+    // poder distinguir de un vistazo, ej., un bucket "gifts-full" que
+    // todavía no existe (falta correr la migración) de un error transitorio.
+    logError(`adminUploadFile(${bucketId})`, error.message);
     return {
       data: null,
       error: "No se pudo subir el archivo. Intentalo nuevamente.",
     };
   }
+
+  // El bucket privado no tiene URL pública: se guarda el PATH tal cual (la
+  // edición completa se entrega recién con una URL firmada temporal, ver
+  // submitGiftFullEdition en src/lib/actions.ts).
+  if (bucketId === "gifts-full") return { data: path, error: null };
 
   const { data } = g.client.storage.from("media").getPublicUrl(path);
   return { data: data.publicUrl, error: null };

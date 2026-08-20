@@ -10,9 +10,12 @@ import type { Gift } from "@/lib/types";
 
 /**
  * Acción de acceso a un regalo según su modo configurado por la admin:
- * - "directo": descarga inmediata del archivo.
- * - "email":   pide nombre (opcional) + email antes de entregar.
- * - "enlace":  redirige a un enlace externo (Drive, YouTube, Canva…).
+ * - "directo":        descarga inmediata del archivo.
+ * - "email":          pide nombre (opcional) + email antes de entregar.
+ * - "enlace":          redirige a un enlace externo (Drive, YouTube, Canva…).
+ * - "breve_completo": descarga inmediata de la edición breve (sin pedir
+ *                      nada) + un enlace secundario hacia el formulario de
+ *                      la edición completa (nombre + email).
  *
  * Componente compartido por la grilla de regalos y el regalo destacado de la
  * portada, para no duplicar lógica.
@@ -119,6 +122,37 @@ export function GiftAccessAction({ gift }: { gift: Gift }) {
       >
         <Mail size={15} aria-hidden /> Recibir gratis con mi email
       </button>
+    );
+  }
+
+  if (access === "breve_completo") {
+    if (!gift.file_url) {
+      return (
+        <a
+          href="/contacto"
+          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-sand-300 bg-white/60 text-sm font-medium text-ink transition-all duration-300 hover:border-lavender-400"
+        >
+          Pedírmelo por mensaje
+        </a>
+      );
+    }
+    return (
+      <div className="space-y-2.5">
+        <a
+          href={gift.file_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={btnClass}
+        >
+          <Download size={16} aria-hidden /> Descargar gratuitamente
+        </a>
+        <a
+          href={`/regalos/completo/${gift.id}`}
+          className="block text-center text-xs text-muted underline underline-offset-2 hover:text-ink"
+        >
+          {gift.full_cta_label || "Quiero la edición completa"}
+        </a>
+      </div>
     );
   }
 

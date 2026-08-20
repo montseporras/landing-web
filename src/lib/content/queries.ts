@@ -176,14 +176,51 @@ async function getList<T>(
   }
 }
 
+/**
+ * La ruta del archivo de la edición completa (`full_file_path`, bucket
+ * privado "gifts-full") nunca debe llegar al navegador antes de que la
+ * persona complete el formulario: `getGifts`/`getGiftById` la fuerzan a
+ * `null` en toda lectura pública. Se resuelve del lado del servidor recién
+ * al enviar el formulario (`submitGiftFullEdition` en `src/lib/actions.ts`).
+ */
+function withoutFullFile(gift: Gift): Gift {
+  return { ...gift, full_file_path: null };
+}
+
 /** Regalos descargables activos, en el orden definido en el panel. */
-export function getGifts(): Promise<Gift[]> {
-  return getList<Gift>(
+export async function getGifts(): Promise<Gift[]> {
+  const gifts = await getList<Gift>(
     "gifts",
     defaultGifts,
     (q) => q.eq("active", true).order("sort_order", { ascending: true }),
     "description_align",
   );
+  return gifts.map(withoutFullFile);
+}
+
+/** Un regalo activo por id, para la página de solicitud de la edición completa. */
+export async function getGiftById(id: string): Promise<Gift | null> {
+  const supabase = createClient();
+  if (!supabase) {
+    const fallback = defaultGifts.find((g) => g.id === id);
+    return fallback ? withoutFullFile(fallback) : null;
+  }
+  try {
+    const { data, error } = await supabase
+      .from("gifts")
+      .select("*")
+      .eq("id", id)
+      .eq("active", true)
+      .maybeSingle();
+    if (error || !data) {
+      if (error) logError("getGiftById", error.message);
+      return null;
+    }
+    return withoutFullFile(data as Gift);
+  } catch (e) {
+    logError("getGiftById", e);
+    return null;
+  }
 }
 
 export function getFaqs(): Promise<Faq[]> {

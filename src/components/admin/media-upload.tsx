@@ -24,6 +24,7 @@ export function MediaUpload({
   kind = "image",
   label,
   folder = "images",
+  bucket = "media",
   spec,
   multiple = false,
 }: {
@@ -34,6 +35,8 @@ export function MediaUpload({
   kind?: "image" | "file";
   label?: string;
   folder?: string;
+  /** Bucket de destino ("media" público por defecto, o "gifts-full" privado). */
+  bucket?: "media" | "gifts-full";
   /** Formato recomendado, ej.: "1280×720 px · JPG/PNG/WebP · máx. 8 MB". */
   spec?: string;
   multiple?: boolean;
@@ -53,6 +56,7 @@ export function MediaUpload({
     formData.set("file", file);
     formData.set("folder", folder);
     formData.set("kind", kind);
+    formData.set("bucket", bucket);
     const { data, error: uploadError } = await adminUploadFile(formData);
     if (uploadError || !data) {
       setError(
