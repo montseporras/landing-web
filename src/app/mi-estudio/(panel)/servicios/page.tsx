@@ -12,23 +12,14 @@ import {
   UnsavedNotice,
 } from "@/components/admin/ui";
 import { useSiteContent } from "@/components/admin/use-site-content";
+import { ICON_COLOR_OPTIONS, ICON_NAMES } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { defaultServicesPage } from "@/lib/content/defaults";
 import { IMAGE_SPECS } from "@/lib/media";
 
-/** Íconos disponibles para las tarjetas de servicios (nombres de Lucide). */
-const ICON_OPTIONS = [
-  { value: "UserRound", label: "Persona" },
-  { value: "Users", label: "Equipo / grupo" },
-  { value: "Lightbulb", label: "Idea / claridad" },
-  { value: "HeartHandshake", label: "Acompañamiento" },
-  { value: "Sparkles", label: "Destello" },
-  { value: "Brain", label: "Mente / neurociencia" },
-  { value: "Compass", label: "Brújula / dirección" },
-  { value: "Leaf", label: "Calma / hoja" },
-  { value: "ShieldCheck", label: "Confianza / escudo" },
-  { value: "MessageCircle", label: "Conversación" },
-];
+/** Íconos disponibles para las tarjetas de servicios (todos los de la
+ * librería ya usada en el proyecto — lucide-react, vía src/components/ui/icon.tsx). */
+const ICON_OPTIONS = ICON_NAMES.map((name) => ({ value: name, label: name }));
 
 export default function AdminServiciosPage() {
   const page = useSiteContent("services_page", defaultServicesPage);
@@ -107,9 +98,16 @@ export default function AdminServiciosPage() {
           {
             name: "icon",
             label: "Ícono",
-            kind: "select",
+            kind: "icon",
             options: ICON_OPTIONS,
-            hint: "Se muestra arriba de cada tarjeta.",
+            hint: "Se muestra arriba de cada tarjeta (salvo que cargues una imagen).",
+          },
+          {
+            name: "icon_color",
+            label: "Color del ícono",
+            kind: "iconColor",
+            options: [...ICON_COLOR_OPTIONS],
+            hint: "Paleta fija del sitio — no admite colores libres.",
           },
           {
             name: "image",

@@ -31,6 +31,10 @@ create table if not exists public.gifts (
   -- Tipo de recurso: TEXTO LIBRE (Ebook, Guía, Curso, Workbook, …)
   category text not null default 'Ebook',
   image text,
+  -- Imagen alternativa SOLO para el bloque destacado del Home (contenedor
+  -- vertical). Opcional: si está vacía, el destacado usa `image` (la misma
+  -- imagen de la tarjeta) como respaldo — ver getGifts()/FeaturedGift.
+  featured_image text,
   file_url text,
   -- Enlace externo (solo para access = 'enlace')
   url text,
@@ -70,6 +74,12 @@ create table if not exists public.services (
   price_label text,
   cta_label text not null default 'Solicitar conversación inicial',
   icon text not null default 'Sparkles',
+  -- Tono de color del ícono: paleta fija (nunca CSS/color libre). "lavender"
+  -- es el color que ya tenían todos los servicios antes de esta columna, así
+  -- que los existentes se ven igual hasta que se elija otro a propósito.
+  icon_color text not null default 'lavender'
+    constraint services_icon_color_check
+    check (icon_color in ('lavender','gold','emerald','rose','sky','amber','stone')),
   image text,
   highlighted boolean not null default false,
   active boolean not null default true,
@@ -346,3 +356,34 @@ alter table public.gifts add column if not exists full_form_success_message text
 insert into storage.buckets (id, name, public)
 values ('gifts-full', 'gifts-full', false)
 on conflict (id) do nothing;
+
+-- ═══════════════════════════════════════════════════════════════════
+--  Desde v7 → v8  (EJECUTAR ESTO si ya tenías la base creada en v7)
+--  Copiá y ejecutá este bloque completo en el SQL Editor de Supabase.
+--
+--  Agrega el color del ícono de cada servicio (paleta fija, nunca CSS/color
+--  libre — ver ICON_COLOR_OPTIONS en src/components/ui/icon.tsx).
+--
+--  100% aditiva e IDEMPOTENTE. "lavender" es el color que ya tenían todos
+--  los servicios antes de esta columna, así que los existentes se ven
+--  exactamente igual hasta que se elija otro color a propósito.
+-- ═══════════════════════════════════════════════════════════════════
+alter table public.services add column if not exists icon_color text not null default 'lavender';
+alter table public.services drop constraint if exists services_icon_color_check;
+alter table public.services add constraint services_icon_color_check
+  check (icon_color in ('lavender','gold','emerald','rose','sky','amber','stone'));
+
+-- ═══════════════════════════════════════════════════════════════════
+--  Desde v8 → v9  (EJECUTAR ESTO si ya tenías la base creada en v8)
+--  Copiá y ejecutá este bloque completo en el SQL Editor de Supabase.
+--
+--  Agrega una imagen alternativa por regalo, usada SOLO en el bloque
+--  destacado del Home (contenedor vertical) — separada de `image`, que
+--  sigue siendo la imagen de la tarjeta (horizontal, /regalos y listados).
+--  Opcional: sin ella, el destacado sigue usando `image` como respaldo.
+--
+--  100% aditiva e IDEMPOTENTE. Ningún regalo existente pierde su imagen
+--  actual ni cambia de comportamiento hasta que se cargue una imagen nueva
+--  específica para el destacado.
+-- ═══════════════════════════════════════════════════════════════════
+alter table public.gifts add column if not exists featured_image text;

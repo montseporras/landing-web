@@ -78,9 +78,9 @@ export default function AdminRegalosPage() {
           },
           {
             name: "image",
-            label: "Portada",
+            label: "Imagen de tarjeta",
             kind: "image",
-            hint: "Imagen de la tarjeta del regalo (opcional).",
+            hint: "Se usa en /regalos y en cualquier listado horizontal (opcional).",
             spec: IMAGE_SPECS.giftCover,
           },
           {
@@ -176,6 +176,14 @@ export default function AdminRegalosPage() {
             kind: "toggle",
             defaultValue: false,
             hint: "El regalo destacado se muestra en grande en la página de inicio. Se recomienda destacar solo uno.",
+          },
+          {
+            name: "featured_image",
+            label: "Imagen para regalo destacado (opcional)",
+            kind: "image",
+            hint: "Solo se usa en el bloque destacado del Home (contenedor vertical). Si no la cargás, se usa la imagen de tarjeta de arriba.",
+            spec: IMAGE_SPECS.ebookCover,
+            showWhen: (v) => v.featured === true,
           },
           { name: "active", label: "Visible en el sitio", kind: "toggle" },
         ]}

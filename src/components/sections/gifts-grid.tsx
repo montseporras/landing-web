@@ -47,6 +47,10 @@ function GiftCard({ gift }: { gift: Gift }) {
             alt=""
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            // Esta es la "Imagen de tarjeta" (horizontal, IMAGE_SPECS.giftCover
+            // — 16:9, igual que este contenedor): el regalo destacado usa una
+            // imagen aparte (`featured_image`), así que acá no hace falta
+            // ningún ajuste de recorte especial.
             className="object-cover transition-transform duration-700 group-hover:scale-105"
           />
         ) : (

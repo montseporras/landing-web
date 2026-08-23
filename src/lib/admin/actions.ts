@@ -593,11 +593,12 @@ export async function adminCount(
 }
 
 /**
- * Quita un registro de la bandeja principal (soft-delete). Requiere la
- * contraseña del panel. El registro NO se borra de la base: queda en el
- * historial permanente. Devuelve un mensaje amigable si la contraseña falla.
+ * Elimina UN registro del historial permanente de forma DEFINITIVA (no es el
+ * soft-delete de "quitar de la bandeja": esto borra la fila de la base).
+ * Requiere la contraseña del panel, validada en el servidor. Devuelve un
+ * mensaje amigable si la contraseña falla — y no borra nada en ese caso.
  */
-export async function adminHideSubmission(
+export async function adminDeleteSubmissionPermanently(
   id: string,
   password: string,
 ): Promise<AdminResult> {
@@ -613,10 +614,44 @@ export async function adminHideSubmission(
 
   const { error } = await g.client
     .from("submissions")
-    .update({ hidden: true })
+    .delete()
     .eq("id", cleanText(id, 100));
   if (error) {
-    logError("adminHideSubmission", error.message);
+    logError("adminDeleteSubmissionPermanently", error.message);
+    return {
+      data: null,
+      error: "No se pudo completar la acción. Intentalo nuevamente.",
+    };
+  }
+  return { data: null, error: null };
+}
+
+/**
+ * Elimina TODO el historial de formularios de forma DEFINITIVA e
+ * irreversible (bandeja + historial: no queda ningún registro). Solo se
+ * ejecuta si la contraseña del panel es correcta, validada en el servidor.
+ * Acción destructiva pedida explícitamente por la administradora — a
+ * diferencia del resto del panel, acá sí se borra de verdad.
+ */
+export async function adminDeleteAllSubmissions(
+  password: string,
+): Promise<AdminResult> {
+  const g = await guard();
+  if (!g.client) return { data: null, error: g.error };
+
+  if (!(await checkPanelPassword(password))) {
+    return {
+      data: null,
+      error: "La contraseña no es correcta. Volvé a intentarlo.",
+    };
+  }
+
+  // Supabase/PostgREST exige un filtro explícito para delete(): esta
+  // condición es verdadera para toda fila (id nunca es null), así que borra
+  // la tabla completa.
+  const { error } = await g.client.from("submissions").delete().not("id", "is", null);
+  if (error) {
+    logError("adminDeleteAllSubmissions", error.message);
     return {
       data: null,
       error: "No se pudo completar la acción. Intentalo nuevamente.",

@@ -1,3 +1,4 @@
+import { DEFAULT_ICON_COLOR, ICON_COLOR_OPTIONS } from "@/components/ui/icon";
 import {
   ALIGN_VALUES,
   containsDangerousMarkup,
@@ -5,6 +6,10 @@ import {
   sanitizeRichTextHtml,
 } from "@/lib/sanitize-html";
 import { cleanText, isSafeUrl, LIMITS } from "@/lib/validation";
+
+/** Valores permitidos para `services.icon_color` — paleta controlada, nunca
+ * CSS/color libre (ver ICON_COLOR_OPTIONS en src/components/ui/icon.tsx). */
+const ICON_COLOR_VALUES: Set<string> = new Set(ICON_COLOR_OPTIONS.map((o) => o.value));
 
 /**
  * Allowlist de tablas y columnas del panel.
@@ -96,6 +101,7 @@ const TABLES: Record<string, Record<string, Sanitizer>> = {
     description_align: asAlign,
     category: (v) => cleanText(v, 60) || "Ebook",
     image: asNullableUrl,
+    featured_image: asNullableUrl,
     file_url: asNullableUrl,
     url: asNullableUrl,
     access: (v) => (GIFT_ACCESS.has(String(v)) ? String(v) : "directo"),
@@ -124,6 +130,8 @@ const TABLES: Record<string, Record<string, Sanitizer>> = {
     price_label: asNullableText(60),
     cta_label: (v) => cleanText(v, 80) || "Solicitar conversación inicial",
     icon: (v) => cleanText(v, 40) || "Sparkles",
+    icon_color: (v) =>
+      ICON_COLOR_VALUES.has(String(v)) ? String(v) : DEFAULT_ICON_COLOR,
     image: asNullableUrl,
     highlighted: asBool,
     active: asBool,

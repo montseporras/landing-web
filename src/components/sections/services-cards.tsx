@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DynamicIcon } from "@/components/ui/icon";
+import { DynamicIcon, iconColorClasses } from "@/components/ui/icon";
 import { RichTextView } from "@/components/ui/rich-text";
 import { cn } from "@/lib/utils";
 import type { SectionHeader, Service } from "@/lib/types";
@@ -60,7 +60,12 @@ export function ServicesCards({
                     />
                   </div>
                 ) : (
-                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-lavender-100 text-lavender-500">
+                  <span
+                    className={cn(
+                      "flex h-12 w-12 items-center justify-center rounded-2xl",
+                      iconColorClasses(service.icon_color),
+                    )}
+                  >
                     <DynamicIcon name={service.icon} />
                   </span>
                 )}

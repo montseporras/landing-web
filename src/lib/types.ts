@@ -37,7 +37,14 @@ export interface Gift {
   description_align: Align;
   /** Tipo de recurso: texto libre (Ebook, Guía, Curso, Workbook, …). */
   category: string;
+  /** Imagen de la tarjeta (horizontal): /regalos y cualquier listado. */
   image: string | null;
+  /**
+   * Imagen alternativa SOLO para el bloque destacado del Home (vertical),
+   * cuando `featured` es true. Opcional — si es null, el destacado usa
+   * `image` como respaldo (ver getGifts en src/lib/content/queries.ts).
+   */
+  featured_image?: string | null;
   file_url: string | null;
   /** Enlace externo (solo para access = "enlace"). */
   url: string | null;
@@ -106,6 +113,8 @@ export interface Service {
   price_label: string | null;
   cta_label: string;
   icon: string;
+  /** Tono de color del ícono, de una paleta controlada (ver ICON_COLOR_OPTIONS en src/components/ui/icon.tsx). */
+  icon_color?: string;
   image: string | null;
   highlighted: boolean;
   active: boolean;

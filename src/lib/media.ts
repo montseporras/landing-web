@@ -65,6 +65,15 @@ export const IMAGE_SPECS = {
   hero: `Recomendado: 1000×1150 px (vertical 7:8) · JPG, PNG o WebP · máx. ${MAX_IMAGE_MB} MB`,
   aboutPhoto: `Recomendado: 800×1000 px (vertical 4:5) · JPG, PNG o WebP · máx. ${MAX_IMAGE_MB} MB`,
   gallery: `Recomendado: 800×800 px (cuadrada) · JPG, PNG o WebP · máx. ${MAX_IMAGE_MB} MB`,
+  /** Regalos → "Imagen de tarjeta": usada en /regalos y listados horizontales. */
   giftCover: `Recomendado: 1280×720 px (horizontal 16:9) · JPG, PNG o WebP · máx. ${MAX_IMAGE_MB} MB`,
+  /**
+   * Regalos → "Imagen para regalo destacado" (campo `featured_image`,
+   * opcional): coincide con el contenedor VERTICAL 4:5 del bloque destacado
+   * del Home (ver src/components/sections/featured-gift.tsx). Es un campo
+   * aparte de `giftCover` — cada uno se usa en su propio contenedor, así que
+   * ninguna de las dos imágenes se recorta por una proporción ajena.
+   */
+  ebookCover: `Recomendado: 1000×1250 px (vertical 4:5, como la portada de un ebook) · JPG, PNG o WebP · máx. ${MAX_IMAGE_MB} MB`,
   downloadFile: `PDF, audio, video, ZIP u Office · máx. ${MAX_FILE_MB} MB`,
 } as const;

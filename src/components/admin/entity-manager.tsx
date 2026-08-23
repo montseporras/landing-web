@@ -13,6 +13,11 @@ import {
   Toggle,
 } from "@/components/admin/ui";
 import { Badge } from "@/components/ui/badge";
+import {
+  DynamicIcon,
+  iconColorClasses,
+  iconColorDotClass,
+} from "@/components/ui/icon";
 import { Input, Textarea } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -22,6 +27,7 @@ import {
   adminUpdate,
 } from "@/lib/admin/actions";
 import type { Align } from "@/lib/sanitize-html";
+import { cn } from "@/lib/utils";
 import { LIMITS } from "@/lib/validation";
 
 export type FieldKind =
@@ -33,7 +39,9 @@ export type FieldKind =
   | "image"
   | "file"
   | "lines" // textarea que se guarda como lista (una línea por ítem)
-  | "richtext"; // editor enriquecido (negrita, cursiva, listas, enlaces, alineación)
+  | "richtext" // editor enriquecido (negrita, cursiva, listas, enlaces, alineación)
+  | "icon" // selector visual de íconos (grilla con vista previa + nombre)
+  | "iconColor"; // selector de color por paleta controlada (círculos de color)
 
 export interface FieldDef {
   name: string;
@@ -177,7 +185,7 @@ export function EntityManager({
                 ? []
                 : f.kind === "image" || f.kind === "file"
                   ? null
-                  : f.kind === "select"
+                  : f.kind === "select" || f.kind === "icon" || f.kind === "iconColor"
                     ? (f.options?.[0]?.value ?? "")
                     : "";
       }
@@ -333,6 +341,75 @@ export function EntityManager({
               </option>
             ))}
           </select>
+        );
+      case "icon": {
+        const current = f.options?.find((o) => o.value === v);
+        return (
+          <div>
+            <div className="grid grid-cols-6 gap-2 sm:grid-cols-8">
+              {f.options?.map((o) => (
+                <button
+                  key={o.value}
+                  type="button"
+                  onClick={() => set(o.value)}
+                  title={o.label}
+                  aria-label={o.label}
+                  aria-pressed={v === o.value}
+                  className={cn(
+                    "flex h-11 w-11 items-center justify-center rounded-2xl border transition-colors",
+                    v === o.value
+                      ? "border-lavender-500 bg-lavender-50 text-lavender-600"
+                      : "border-sand-200 bg-white text-ink hover:border-lavender-300",
+                  )}
+                >
+                  <DynamicIcon name={o.value} size={18} />
+                </button>
+              ))}
+            </div>
+            {/* Nombre del ícono elegido, como referencia además de la vista visual. */}
+            <p className="mt-2 text-xs text-muted">
+              Elegido: {current?.label ?? (v as string) ?? "Sparkles"}
+            </p>
+          </div>
+        );
+      }
+      case "iconColor":
+        return (
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Vista previa combinada: mismo ícono + color que se ve en la
+                tarjeta pública, antes de guardar. */}
+            <span
+              className={cn(
+                "mr-1 flex h-11 w-11 flex-none items-center justify-center rounded-2xl",
+                iconColorClasses(v as string),
+              )}
+            >
+              <DynamicIcon name={(editing.icon as string) ?? "Sparkles"} size={20} />
+            </span>
+            {f.options?.map((o) => (
+              <button
+                key={o.value}
+                type="button"
+                onClick={() => set(o.value)}
+                title={o.label}
+                aria-label={o.label}
+                aria-pressed={v === o.value}
+                className={cn(
+                  "flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all",
+                  v === o.value
+                    ? "border-ink"
+                    : "border-transparent hover:border-sand-300",
+                )}
+              >
+                <span
+                  className={cn(
+                    "h-6 w-6 rounded-full",
+                    iconColorDotClass(o.value),
+                  )}
+                />
+              </button>
+            ))}
+          </div>
         );
       case "toggle":
         return (

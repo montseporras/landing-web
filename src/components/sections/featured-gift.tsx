@@ -7,6 +7,7 @@ import { GiftAccessAction } from "@/components/sections/gift-access";
 import { Reveal } from "@/components/motion/reveal";
 import { RichTextView } from "@/components/ui/rich-text";
 import { giftCategoryDisplay } from "@/lib/content/defaults";
+import { cn } from "@/lib/utils";
 import type { Gift } from "@/lib/types";
 
 /**
@@ -18,6 +19,11 @@ import type { Gift } from "@/lib/types";
  */
 export function FeaturedGift({ gift }: { gift: Gift }) {
   const reduce = useReducedMotion();
+  // `featured_image` (vertical, pensada para este bloque) tiene prioridad;
+  // si no existe, se usa `image` (la de la tarjeta, horizontal) como
+  // respaldo — ver src/lib/content/queries.ts (getGifts).
+  const hasFeaturedImage = Boolean(gift.featured_image);
+  const coverSrc = gift.featured_image ?? gift.image;
 
   return (
     <section className="py-20 md:py-28 lg:py-32">
@@ -45,13 +51,24 @@ export function FeaturedGift({ gift }: { gift: Gift }) {
                 className="absolute -inset-3 rounded-[2rem] border border-gold-300/40 transition-transform duration-500 group-hover:scale-105"
               />
               <div className="relative aspect-[4/5] w-full overflow-hidden rounded-3xl bg-gradient-to-br from-lavender-100 to-sand-100 shadow-lifted transition-transform duration-500 group-hover:scale-105">
-                {gift.image ? (
+                {coverSrc ? (
                   <Image
-                    src={gift.image}
+                    src={coverSrc}
                     alt={`Portada de ${gift.title}`}
                     fill
                     sizes="(max-width: 1024px) 18rem, 20rem"
-                    className="object-cover"
+                    className={cn(
+                      hasFeaturedImage
+                        ? // Imagen pensada a propósito para este contenedor
+                          // vertical (ver IMAGE_SPECS.ebookCover): object-top
+                          // es solo un resguardo si no calza exacto.
+                          "object-cover object-top"
+                        : // Respaldo: es la imagen horizontal de la tarjeta.
+                          // object-cover la recortaría de forma agresiva en
+                          // un marco vertical, así que se muestra completa
+                          // (contain) sobre el fondo degradado del bloque.
+                          "object-contain",
+                    )}
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center">

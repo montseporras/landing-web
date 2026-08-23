@@ -32,8 +32,12 @@ export default async function HomePage() {
       getHomeSections(),
     ]);
 
-  // El regalo destacado (eBook principal): el marcado como featured, o el primero.
-  const featured = gifts.find((g) => g.featured) ?? gifts[0];
+  // El regalo destacado (eBook principal): SOLO el marcado como featured. Sin
+  // fallback al primero de la lista — si ninguno está marcado, no se muestra
+  // ningún bloque destacado (antes, desactivar "featured" desde el panel no
+  // sacaba el tratamiento destacado del Home: simplemente caía al primer
+  // regalo de la lista, que igual se mostraba como si estuviera destacado).
+  const featured = gifts.find((g) => g.featured);
   // En la grilla de la portada no repetimos el destacado.
   const gridGifts = gifts.filter((g) => g.id !== featured?.id).slice(0, 3);
 
