@@ -1,3 +1,4 @@
+import { DEFAULT_ALIGN } from "@/lib/sanitize-html";
 import type {
   AboutContent,
   AboutSections,
@@ -19,13 +20,15 @@ import type {
   StepItem,
 } from "@/lib/types";
 
-/** Envuelve texto plano en un párrafo de texto enriquecido, alineado a la izquierda. */
+/** Envuelve texto plano en un párrafo de texto enriquecido, con la alineación
+ * por defecto del proyecto (ver DEFAULT_ALIGN) — este contenido nunca tuvo
+ * una elección explícita guardada. */
 function rich(text: string): RichText {
   const escaped = text
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
-  return { html: `<p>${escaped}</p>`, align: "left" };
+  return { html: `<p>${escaped}</p>`, align: DEFAULT_ALIGN };
 }
 
 /**
@@ -213,7 +216,7 @@ export const defaultServices: Service[] = [
     title: "Proceso individual 1:1",
     description:
       "<p>Un acompañamiento personalizado de 3 meses para trabajar en profundidad tu gestión emocional, confianza y amor propio.</p>",
-    description_align: "left",
+    description_align: DEFAULT_ALIGN,
     features: [
       "12 sesiones online de 60 minutos",
       "Plan de trabajo 100% personalizado",
@@ -233,7 +236,7 @@ export const defaultServices: Service[] = [
     title: "Sesión de claridad puntual",
     description:
       "<p>Una sesión intensiva de 90 minutos para destrabar una situación concreta: una decisión, un conflicto, un momento de ansiedad.</p>",
-    description_align: "left",
+    description_align: DEFAULT_ALIGN,
     features: [
       "90 minutos de trabajo enfocado",
       "Herramientas aplicables desde el día uno",
@@ -252,7 +255,7 @@ export const defaultServices: Service[] = [
     title: "Coaching Organizacional",
     description:
       "<p>Acompañamiento para empresas e instituciones: capacitaciones corporativas e intervenciones que fortalecen el liderazgo, la comunicación efectiva y el bienestar de los equipos.</p>",
-    description_align: "left",
+    description_align: DEFAULT_ALIGN,
     features: [
       "Desarrollo de liderazgo y formación de equipos",
       "Inteligencia emocional aplicada al trabajo",
@@ -275,7 +278,7 @@ export const defaultGifts: Gift[] = [
     title: "Calma: guía práctica de gestión emocional",
     description:
       "<p>Mi ebook con el método de 5 pasos que uso con mis clientes para pasar del caos emocional a la calma. Incluye ejercicios, plantillas y un plan de 7 días.</p>",
-    description_align: "left",
+    description_align: DEFAULT_ALIGN,
     category: "ebook",
     image: null,
     file_url: null,
@@ -291,7 +294,7 @@ export const defaultGifts: Gift[] = [
     title: "Meditación guiada: volver al cuerpo",
     description:
       "<p>Audio de 12 minutos para soltar el ruido mental y volver al presente. Ideal para empezar o cerrar el día.</p>",
-    description_align: "left",
+    description_align: DEFAULT_ALIGN,
     category: "meditacion",
     image: null,
     file_url: null,
@@ -307,7 +310,7 @@ export const defaultGifts: Gift[] = [
     title: "Checklist: tu botiquín emocional",
     description:
       "<p>Una lista imprimible con recursos rápidos para días difíciles: qué hacer, qué evitar y a quién llamar.</p>",
-    description_align: "left",
+    description_align: DEFAULT_ALIGN,
     category: "checklist",
     image: null,
     file_url: null,
@@ -323,7 +326,7 @@ export const defaultGifts: Gift[] = [
     title: "Plantilla: diario de emociones semanal",
     description:
       "<p>Registrá tus emociones, disparadores y aprendizajes semana a semana con esta plantilla lista para imprimir.</p>",
-    description_align: "left",
+    description_align: DEFAULT_ALIGN,
     category: "plantilla",
     image: null,
     file_url: null,
@@ -339,7 +342,7 @@ export const defaultGifts: Gift[] = [
     title: "Audio: respiración para calmar la ansiedad",
     description:
       "<p>Una práctica de respiración guiada de 6 minutos, basada en neurociencia, para usar en cualquier momento.</p>",
-    description_align: "left",
+    description_align: DEFAULT_ALIGN,
     category: "audio",
     image: null,
     file_url: null,
@@ -355,7 +358,7 @@ export const defaultGifts: Gift[] = [
     title: "Guía: conversaciones difíciles sin explotar",
     description:
       "<p>Un guion paso a paso para comunicar límites con calma y firmeza, sin culpa y sin discusiones eternas.</p>",
-    description_align: "left",
+    description_align: DEFAULT_ALIGN,
     category: "guia",
     image: null,
     file_url: null,
@@ -400,7 +403,7 @@ export const defaultFaqs: Faq[] = [
     question: "¿Qué diferencia hay entre coaching y terapia?",
     answer:
       "<p>La terapia trabaja principalmente sanando el pasado y tratando cuadros clínicos; el coaching trabaja desde tu presente hacia tus objetivos. Yo trabajo con personas funcionales que quieren mejorar su gestión emocional, confianza y claridad. Si en el proceso detecto que necesitás apoyo terapéutico, te lo digo con honestidad y puedo derivarte con profesionales de confianza.</p>",
-    answer_align: "left",
+    answer_align: DEFAULT_ALIGN,
     active: true,
     sort_order: 1,
   },
@@ -409,7 +412,7 @@ export const defaultFaqs: Faq[] = [
     question: "¿Cómo son las sesiones?",
     answer:
       "<p>Son encuentros online de 60 minutos por videollamada, en un espacio 100% confidencial. Combinamos conversación profunda con herramientas prácticas de coaching, inteligencia emocional y neurociencia. Entre sesiones te llevás ejercicios concretos para aplicar lo trabajado.</p>",
-    answer_align: "left",
+    answer_align: DEFAULT_ALIGN,
     active: true,
     sort_order: 2,
   },
@@ -418,7 +421,7 @@ export const defaultFaqs: Faq[] = [
     question: "¿Cuánto dura un proceso?",
     answer:
       "<p>El proceso individual completo dura 3 meses, con una sesión semanal. Es el tiempo que la evidencia y mi experiencia muestran necesario para instalar nuevos hábitos emocionales. También ofrezco sesiones puntuales de claridad para temas específicos.</p>",
-    answer_align: "left",
+    answer_align: DEFAULT_ALIGN,
     active: true,
     sort_order: 3,
   },
@@ -427,7 +430,7 @@ export const defaultFaqs: Faq[] = [
     question: "¿La primera llamada tiene costo?",
     answer:
       "<p>No. La llamada de claridad de 30 minutos es gratuita y sin compromiso. Sirve para conocernos, entender tu momento y ver si puedo ayudarte. Si no soy la persona indicada, te lo digo.</p>",
-    answer_align: "left",
+    answer_align: DEFAULT_ALIGN,
     active: true,
     sort_order: 4,
   },
@@ -436,7 +439,7 @@ export const defaultFaqs: Faq[] = [
     question: "¿Trabajás con hombres también?",
     answer:
       "<p>Sí. Aunque gran parte de mi comunidad son mujeres, acompaño a cualquier persona comprometida con su desarrollo emocional. Las emociones no tienen género.</p>",
-    answer_align: "left",
+    answer_align: DEFAULT_ALIGN,
     active: true,
     sort_order: 5,
   },
@@ -445,7 +448,7 @@ export const defaultFaqs: Faq[] = [
     question: "¿Qué pasa si necesito reprogramar una sesión?",
     answer:
       "<p>Podés reprogramar sin costo avisando con al menos 24 horas de anticipación. La vida pasa, y el proceso está diseñado para adaptarse a ella.</p>",
-    answer_align: "left",
+    answer_align: DEFAULT_ALIGN,
     active: true,
     sort_order: 6,
   },

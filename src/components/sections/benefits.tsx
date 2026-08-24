@@ -33,7 +33,7 @@ export function Benefits({
                 <h3 className="mt-6 font-display text-xl text-ink">
                   {benefit.title}
                 </h3>
-                <p className="mt-3 text-sm leading-relaxed text-muted">
+                <p className="text-justify-soft mt-3 text-sm leading-relaxed text-muted">
                   {benefit.description}
                 </p>
               </article>

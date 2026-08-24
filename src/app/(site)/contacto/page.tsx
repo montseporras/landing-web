@@ -73,7 +73,7 @@ export default async function ContactoPage() {
                     <h2 className="font-display text-lg text-ink">
                       {channel.label}
                     </h2>
-                    <p className="mt-1 text-sm text-muted">
+                    <p className="text-justify-soft mt-1 text-sm text-muted">
                       {channel.description}
                     </p>
                     <p className="mt-2 text-sm font-medium text-gold-600">

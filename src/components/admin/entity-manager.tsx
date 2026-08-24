@@ -26,7 +26,7 @@ import {
   adminList,
   adminUpdate,
 } from "@/lib/admin/actions";
-import type { Align } from "@/lib/sanitize-html";
+import { DEFAULT_ALIGN, type Align } from "@/lib/sanitize-html";
 import { cn } from "@/lib/utils";
 import { LIMITS } from "@/lib/validation";
 
@@ -190,7 +190,9 @@ export function EntityManager({
                     : "";
       }
       if (f.kind === "richtext" && f.alignField) {
-        blank[f.alignField] = "left";
+        // Sin elección explícita todavía (contenido recién creado): usa la
+        // alineación por defecto centralizada, no un literal repetido acá.
+        blank[f.alignField] = DEFAULT_ALIGN;
       }
     });
     if (hasActive) blank.active = true;

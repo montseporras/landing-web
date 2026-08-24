@@ -21,7 +21,19 @@ export const ALIGN_VALUES: readonly Align[] = [
   "right",
   "justify",
 ];
-export const DEFAULT_ALIGN: Align = "left";
+/**
+ * Alineación por defecto para texto enriquecido cuando NO hay una elección
+ * explícita guardada (contenido recién creado, datos legados de antes de que
+ * existiera este campo, o un valor corrupto/ausente). Es el ÚNICO lugar del
+ * proyecto que define ese valor — todo lo demás (EntityManager, el helper
+ * `rich()` de contenido por defecto, `src/lib/content/defaults.ts`) importa
+ * esta constante en vez de repetir el literal, así el criterio de "sin
+ * alineación guardada" queda centralizado en un solo sitio.
+ *
+ * Un valor YA guardado explícitamente (izquierda/centro/derecha/justificado)
+ * nunca pasa por acá: `getTextAlignmentClass()` lo respeta tal cual está.
+ */
+export const DEFAULT_ALIGN: Align = "justify";
 
 export interface RichText {
   html: string;
