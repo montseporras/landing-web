@@ -457,6 +457,7 @@ export const defaultFaqs: Faq[] = [
 export const defaultSocial: SocialLinks = {
   instagram: "https://instagram.com/francissalazar.coach",
   whatsapp: "https://wa.me/5490000000000",
+  whatsappEnabled: true,
   email: "hola@francissalazar.com",
   linkedin: "",
   youtube: "",

@@ -242,6 +242,8 @@ export interface FooterCta {
 export interface SocialLinks {
   instagram: string;
   whatsapp: string;
+  /** Si es false, WhatsApp no se muestra en ningún lugar del sitio público. */
+  whatsappEnabled: boolean;
   email: string;
   linkedin: string;
   youtube: string;

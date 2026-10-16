@@ -9,6 +9,7 @@ import {
   NotConfigured,
   RestoreDefaultButton,
   SaveButton,
+  Toggle,
   UnsavedNotice,
 } from "@/components/admin/ui";
 import { useSiteContent } from "@/components/admin/use-site-content";
@@ -160,6 +161,20 @@ export default function AdminConfiguracionPage() {
                 }
                 placeholder="https://wa.me/…"
               />
+              <div className="mt-3 flex items-center gap-3">
+                <Toggle
+                  checked={social.value.whatsappEnabled}
+                  onChange={(whatsappEnabled) =>
+                    social.setValue({ ...social.value, whatsappEnabled })
+                  }
+                  label="Mostrar WhatsApp en el sitio"
+                />
+                <span className="text-sm text-muted">
+                  {social.value.whatsappEnabled
+                    ? "Visible en el sitio (botón flotante, footer y contacto)"
+                    : "Oculto en todo el sitio"}
+                </span>
+              </div>
             </Field>
             <Field label="Email de contacto">
               <Input

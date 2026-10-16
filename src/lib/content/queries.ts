@@ -92,8 +92,17 @@ export async function getAbout(): Promise<AboutContent> {
     mission: coerceRichText(raw.mission, defaultAbout.mission),
   };
 }
-export const getSocial = () =>
-  getSiteContent<SocialLinks>("social", defaultSocial);
+/**
+ * Si la admin desactivó WhatsApp, el enlace se vacía acá: el botón flotante,
+ * el footer y la página de contacto ya ocultan los canales sin enlace, así
+ * que desaparece en todo el sitio sin perder el número guardado en el panel.
+ */
+export async function getSocial(): Promise<SocialLinks> {
+  const social = await getSiteContent<SocialLinks>("social", defaultSocial);
+  return social.whatsappEnabled === false
+    ? { ...social, whatsapp: "" }
+    : social;
+}
 export const getSeo = () => getSiteContent<SeoSettings>("seo", defaultSeo);
 export const getGeneral = () =>
   getSiteContent<GeneralSettings>("general", defaultGeneral);
