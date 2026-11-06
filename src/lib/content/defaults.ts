@@ -465,7 +465,7 @@ export const defaultSocial: SocialLinks = {
 };
 
 export const defaultSeo: SeoSettings = {
-  metaTitle: "FS · Francis Salazar — Coaching emocional y desarrollo personal",
+  metaTitle: "FS - Coach Profesional | Liderazgo | Equipos",
   metaDescription:
     "Coaching de gestión emocional, inteligencia emocional y neurociencia. Recuperá tu calma, tu confianza y tu amor propio con Francis Salazar. Regalos descargables y sesiones online.",
   keywords:

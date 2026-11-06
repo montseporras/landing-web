@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   defaultFooterCta,
   defaultGeneral,
+  defaultSeo,
   defaultSocial,
 } from "@/lib/content/defaults";
 
@@ -25,6 +26,7 @@ export default function AdminConfiguracionPage() {
   const general = useSiteContent("general", defaultGeneral);
   const social = useSiteContent("social", defaultSocial);
   const footer = useSiteContent("footer", defaultFooterCta);
+  const seo = useSiteContent("seo", defaultSeo);
 
   if (!general.configured) {
     return (
@@ -34,7 +36,7 @@ export default function AdminConfiguracionPage() {
       </>
     );
   }
-  if (general.loading || social.loading || footer.loading) {
+  if (general.loading || social.loading || footer.loading || seo.loading) {
     return (
       <>
         <AdminHeader title="Configuración" />
@@ -44,7 +46,12 @@ export default function AdminConfiguracionPage() {
   }
 
   async function saveAll() {
-    await Promise.all([general.save(), social.save(), footer.save()]);
+    await Promise.all([
+      general.save(),
+      social.save(),
+      footer.save(),
+      seo.save(),
+    ]);
   }
 
   function cancelAll() {
@@ -54,12 +61,16 @@ export default function AdminConfiguracionPage() {
     general.setValue(general.lastSaved);
     social.setValue(social.lastSaved);
     footer.setValue(footer.lastSaved);
+    seo.setValue(seo.lastSaved);
   }
 
-  const isDirty = general.isDirty || social.isDirty || footer.isDirty;
-  const saving = general.saving || social.saving || footer.saving;
-  const saved = general.saved || social.saved || footer.saved;
-  const error = general.error ?? social.error ?? footer.error;
+  const isDirty =
+    general.isDirty || social.isDirty || footer.isDirty || seo.isDirty;
+  const saving =
+    general.saving || social.saving || footer.saving || seo.saving;
+  const saved = general.saved || social.saved || footer.saved || seo.saved;
+  const error =
+    general.error ?? social.error ?? footer.error ?? seo.error;
 
   return (
     <form
@@ -70,7 +81,7 @@ export default function AdminConfiguracionPage() {
     >
       <AdminHeader
         title="Configuración general"
-        description="Marca, redes sociales y footer del sitio."
+        description="Marca, redes sociales, footer y SEO del sitio."
         actions={<SaveButton saving={saving} saved={saved} />}
       />
 
@@ -274,6 +285,34 @@ export default function AdminConfiguracionPage() {
           </div>
         </AdminCard>
 
+        <AdminCard title="SEO y vista previa de enlaces">
+          <p className="mb-4 text-sm text-muted">
+            El título y la descripción que aparecen en Google y al compartir
+            el enlace del sitio (WhatsApp, redes sociales).
+          </p>
+          <div className="space-y-4">
+            <Field label="Título">
+              <Input
+                value={seo.value.metaTitle}
+                onChange={(e) =>
+                  seo.setValue({ ...seo.value, metaTitle: e.target.value })
+                }
+              />
+            </Field>
+            <Field label="Descripción">
+              <Textarea
+                value={seo.value.metaDescription}
+                onChange={(e) =>
+                  seo.setValue({
+                    ...seo.value,
+                    metaDescription: e.target.value,
+                  })
+                }
+              />
+            </Field>
+          </div>
+        </AdminCard>
+
         <div className="flex flex-col items-end gap-3">
           <ErrorNotice message={error} />
           <UnsavedNotice show={isDirty} />
@@ -283,6 +322,7 @@ export default function AdminConfiguracionPage() {
                 general.restoreDefault("Marca y footer");
                 social.restoreDefault("Redes sociales");
                 footer.restoreDefault("CTA del footer");
+                seo.restoreDefault("SEO");
               }}
             />
             <CancelButton onClick={cancelAll} />
